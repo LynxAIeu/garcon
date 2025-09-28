@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon/gg"
 )
 
 type WebForm struct {

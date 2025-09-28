@@ -24,10 +24,44 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/go-chi/chi/v5"
 
-	"github.com/teal-finance/emo"
+	"github.com/LM4eu/emo"
 )
 
-var log = emo.NewZone("garcon")
+type (
+	sizeError struct {
+		inLen  int
+		hexLen int
+		b64Len int
+	}
+
+	decodeError struct {
+		err   error
+		inLen int
+		isHex bool
+	}
+)
+
+var (
+	log = emo.NewZone("garcon")
+
+	ErrNonPrintable = errors.New("non-printable")
+)
+
+func (e *sizeError) Error() string {
+	return fmt.Sprintf("got %d bytes but want %d hexadecimal digits or %d unpadded Base64 characters (RFC 4648 §5)", e.inLen, e.hexLen, e.b64Len)
+}
+
+func (e *decodeError) Error() string {
+	base := "Base64"
+	if e.isHex {
+		base = "Hexadecimal"
+	}
+	return fmt.Sprintf("cannot decode the %d bytes as %s: %s", e.inLen, base, e.err.Error())
+}
+
+func (e *decodeError) Unwrap() error {
+	return e.err
+}
 
 // OverwriteBufferContent is to erase a secret when it is no longer required.
 func OverwriteBufferContent(b []byte) {
@@ -178,8 +212,6 @@ func KeepSchemeHostOnly(urls []*url.URL) []string {
 	}
 	return sh
 }
-
-var ErrNonPrintable = errors.New("non-printable")
 
 // Value returns the /endpoint/{key} (URL path)
 // else the "key" form (HTTP body)
@@ -572,34 +604,6 @@ func decodeHexOrB64Bytes(dst, src []byte, isHex bool) (int, error) {
 		return hex.Decode(dst, src)
 	}
 	return base64.RawURLEncoding.Decode(dst, src)
-}
-
-type sizeError struct {
-	inLen  int
-	hexLen int
-	b64Len int
-}
-
-func (e *sizeError) Error() string {
-	return fmt.Sprintf("got %d bytes but want %d hexadecimal digits or %d unpadded Base64 characters (RFC 4648 §5)", e.inLen, e.hexLen, e.b64Len)
-}
-
-type decodeError struct {
-	err   error
-	inLen int
-	isHex bool
-}
-
-func (e *decodeError) Error() string {
-	base := "Base64"
-	if e.isHex {
-		base = "Hexadecimal"
-	}
-	return fmt.Sprintf("cannot decode the %d bytes as %s: %s", e.inLen, base, e.err.Error())
-}
-
-func (e *decodeError) Unwrap() error {
-	return e.err
 }
 
 // B2S (Bytes to String) returns a string pointing to a []byte without copying.

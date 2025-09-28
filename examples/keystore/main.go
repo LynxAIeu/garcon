@@ -14,12 +14,21 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/teal-finance/emo"
-	"github.com/teal-finance/garcon"
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon"
+
+	"github.com/LM4eu/garcon/gg"
+
+	"github.com/LM4eu/emo"
 )
 
-var log = emo.NewZone("app")
+type (
+	db struct {
+		g        *garcon.Garcon
+		KeysByIP map[string]Keys
+	}
+
+	Keys map[string]string
+)
 
 // Garcon settings
 const (
@@ -27,6 +36,8 @@ const (
 )
 
 var (
+	log = emo.NewZone("app")
+
 	mainPort  = gg.EnvInt("MAIN_PORT", 8088)
 	pprofPort = gg.EnvInt("PPROF_PORT", 8098)
 	expPort   = gg.EnvInt("EXP_PORT", 9098)
@@ -93,13 +104,6 @@ func router(g *garcon.Garcon) http.Handler {
 
 	return r
 }
-
-type db struct {
-	g        *garcon.Garcon
-	KeysByIP map[string]Keys
-}
-
-type Keys map[string]string
 
 func (db *db) list(w http.ResponseWriter, r *http.Request) {
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)

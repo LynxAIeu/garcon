@@ -10,9 +10,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/teal-finance/emo"
-	"github.com/teal-finance/garcon"
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon"
+
+	"github.com/LM4eu/garcon/gg"
+
+	"github.com/LM4eu/emo"
 )
 
 var log = emo.NewZone("app")

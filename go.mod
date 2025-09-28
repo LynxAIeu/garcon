@@ -1,4 +1,4 @@
-module github.com/teal-finance/garcon
+module github.com/LM4eu/garcon
 
 go 1.22
 

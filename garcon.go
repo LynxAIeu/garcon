@@ -16,9 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/teal-finance/emo"
-	"github.com/teal-finance/garcon/gg"
-	"github.com/teal-finance/incorruptible"
+	"github.com/LM4eu/garcon/gg"
+	"github.com/LM4eu/garcon/gwt"
+
+	"github.com/LM4eu/garcon/vv"
+
+	"github.com/LM4eu/emo"
+	"github.com/LM4eu/incorruptible"
 )
 
 var log = emo.NewZone("garcon")

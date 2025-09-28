@@ -12,12 +12,11 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/LM4eu/garcon/gg"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/teal-finance/garcon/gg"
 )
 
 // ServerName is used in multiple parts in Garcon:

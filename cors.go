@@ -11,7 +11,7 @@ import (
 
 	"github.com/rs/cors"
 
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon/gg"
 )
 
 // MiddlewareCORS is a middleware to handle Cross-Origin Resource Sharing (CORS).

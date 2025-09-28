@@ -10,14 +10,21 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/teal-finance/emo"
-	"github.com/teal-finance/garcon"
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon"
+
+	"github.com/LM4eu/garcon/gg"
+
+	"github.com/LM4eu/emo"
 )
+
+type others struct{}
 
 var log = emo.NewZone("app")
 
-var port = ":" + gg.EnvStr("MAIN_PORT", "8087")
+func (others) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	log.Info("router.NotFound")
+	w.Write([]byte("<html><body> router.NotFound </body></html>"))
+}
 
 func main() {
 	endpoint := flag.String("post-endpoint", "/", "The endpoint for the POST request.")
@@ -37,6 +44,8 @@ func main() {
 
 	handler := middleware.Then(router)
 
+	port := ":" + gg.EnvStr("MAIN_PORT", "8087")
+
 	server := http.Server{
 		Addr:    port,
 		Handler: handler,
@@ -49,11 +58,4 @@ func main() {
 func post(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	log.Info("router.Post")
 	w.Write([]byte("<html><body> router.Post </body></html>"))
-}
-
-type others struct{}
-
-func (others) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	log.Info("router.NotFound")
-	w.Write([]byte("<html><body> router.NotFound </body></html>"))
 }

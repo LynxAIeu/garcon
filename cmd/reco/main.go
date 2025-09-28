@@ -11,17 +11,18 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/teal-finance/emo"
-	"github.com/teal-finance/garcon/gg"
-	"github.com/teal-finance/garcon/timex"
-)
+	"github.com/LM4eu/garcon/gg"
+	"github.com/LM4eu/garcon/timex"
 
-var log = emo.NewZone("reco")
+	"github.com/LM4eu/emo"
+)
 
 const (
 	minAutoLoops = 9
 	maxAutoLoops = 9999
 )
+
+var log = emo.NewZone("reco")
 
 func main() {
 	level := flag.Int("level", 99, "Compression level")

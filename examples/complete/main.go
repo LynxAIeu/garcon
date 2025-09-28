@@ -11,12 +11,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/teal-finance/emo"
-	"github.com/teal-finance/garcon"
-	"github.com/teal-finance/garcon/gg"
-)
+	"github.com/LM4eu/garcon"
 
-var log = emo.NewZone("app")
+	"github.com/LM4eu/garcon/gg"
+
+	"github.com/LM4eu/garcon/vv"
+
+	"github.com/LM4eu/emo"
+)
 
 // Garcon settings
 const (
@@ -28,6 +30,8 @@ const (
 )
 
 var (
+	log = emo.NewZone("app")
+
 	mainPort  = gg.EnvInt("MAIN_PORT", 8084)
 	pprofPort = gg.EnvInt("PPROF_PORT", 8094)
 	expPort   = gg.EnvInt("EXP_PORT", 9094)

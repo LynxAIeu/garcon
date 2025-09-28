@@ -7,7 +7,7 @@ package garcon
 import (
 	"net/http"
 
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon/gg"
 )
 
 // MiddlewareRejectUnprintableURI is a middleware rejecting HTTP requests having

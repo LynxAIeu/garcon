@@ -21,7 +21,27 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/teal-finance/garcon/gg"
+	"github.com/LM4eu/garcon/gg"
+)
+
+const wantedBodyResponse = "t1\nt2\nt3\nt4\napp\n"
+
+var (
+	testApp = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, err := w.Write([]byte("app\n"))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	testRoundTripApp = gg.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
+		err := appendTag("app\n", r)
+		if err != nil {
+			panic(err)
+		}
+		var res http.Response
+		return &res, nil
+	})
 )
 
 func TestNewChain(t *testing.T) {
@@ -129,7 +149,10 @@ func TestRTChain_ThenFunc_ConstructsRoundTripperFunc(t *testing.T) {
 		t.Fatal(err)
 	}
 	if res.Body != nil {
-		res.Body.Close()
+		err = res.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	if reflect.TypeOf(chained) != reflect.TypeOf(gg.RoundTripperFunc(nil)) {
@@ -186,8 +209,6 @@ func TestChain_Then_OrdersRoundTrippersCorrectly(t *testing.T) {
 	}
 }
 
-const bodyResponse = "t1\nt2\nt3\nt4\napp\n"
-
 func TestChain_Append_AddsHandlersCorrectly1(t *testing.T) {
 	chain := gg.NewChain(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
 	newChain := chain.Append(tagMiddleware("t3\n"), tagMiddleware("t4\n"))
@@ -209,7 +230,7 @@ func TestChain_Append_AddsHandlersCorrectly1(t *testing.T) {
 
 	chained.ServeHTTP(w, r)
 
-	if w.Body.String() != bodyResponse {
+	if w.Body.String() != wantedBodyResponse {
 		t.Error("Append does not add handlers correctly")
 	}
 }
@@ -244,7 +265,7 @@ func TestRTChain_Append_AddsRoundTrippersCorrectly1(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if body != bodyResponse {
+	if body != wantedBodyResponse {
 		t.Error("Append does not add round trippers correctly")
 	}
 }
@@ -274,7 +295,7 @@ func TestChain_Append_AddsHandlersCorrectly2(t *testing.T) {
 
 	chained.ServeHTTP(w, r)
 
-	if w.Body.String() != bodyResponse {
+	if w.Body.String() != wantedBodyResponse {
 		t.Error("Append does not add handlers in correctly")
 	}
 }
@@ -313,7 +334,7 @@ func TestRTChain_Append_AddsRoundTrippersCorrectly2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if body != bodyResponse {
+	if body != wantedBodyResponse {
 		t.Error("Append does not add round trippers in correctly")
 	}
 }
@@ -388,22 +409,6 @@ func funcsEqual(f1, f2 any) bool {
 	val2 := reflect.ValueOf(f2)
 	return val1.Pointer() == val2.Pointer()
 }
-
-var testApp = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-	_, err := w.Write([]byte("app\n"))
-	if err != nil {
-		panic(err)
-	}
-})
-
-var testRoundTripApp = gg.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
-	err := appendTag("app\n", r)
-	if err != nil {
-		panic(err)
-	}
-	var res http.Response
-	return &res, nil
-})
 
 func appendTag(tag string, r *http.Request) error {
 	var body []byte
