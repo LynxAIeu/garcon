@@ -26,7 +26,7 @@ up+: go.sum
 .PHONY: fmt
 fmt:
 	go generate ./...
-	go run mvdan.cc/gofumpt@latest -w -extra -l -lang 1.22 .
+	go run mvdan.cc/gofumpt@latest -w -extra -l -lang go1.25 .
 
 .PHONY: test
 test:
@@ -47,7 +47,7 @@ T ?= 10s
 
 .PHONY: vet
 vet:
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run --fix || true
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run --fix || true
 	pkill -fe [/]exe/complete   || true
 	pkill -fe [/]exe/low-level  || true
 	pkill -fe [/]exe/keystore   || true
