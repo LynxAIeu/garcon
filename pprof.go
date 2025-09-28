@@ -88,6 +88,8 @@ func runPProfServer(addr string, handler http.Handler) {
 		ErrorLog:                     nil,
 		BaseContext:                  nil,
 		ConnContext:                  nil,
+		HTTP2:                        nil,
+		Protocols:                    nil,
 	}
 	err := server.ListenAndServe()
 	log.Panic(err)

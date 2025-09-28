@@ -23,17 +23,17 @@ import (
 	"github.com/LM4eu/emo"
 )
 
-// Garcon settings
+// Garcon settings.
 const (
 	apiDoc            = "https://my-dns.co/myapp/doc"
 	allowedProdOrigin = "https://my-dns.co"
 	allowedDevOrigins = "http://localhost:  http://192.168.1."
 	serverHeader      = "MyBackendName-1.2.0"
 	burst, reqMinute  = 10, 30
-	// the HMAC-SHA256 key to decode JWT (to be removed from source code)
+	// The HMAC-SHA256 key to decode JWT (to be removed from source code).
 	hmacSHA256Hex = "9d2e0a02121179a3c3de1b035ae1355b1548781c8ce8538a1dc0853a12dfb13d"
-	// authCfg is deprecated
-	// authCfg = "examples/sample-auth.rego"
+	// AuthCfg is deprecated
+	// authCfg = "examples/sample-auth.rego".
 )
 
 var (
@@ -113,19 +113,22 @@ func runServer(h http.Handler, connState func(net.Conn, http.ConnState)) {
 	const mainPort = "8080"
 
 	server := http.Server{
-		Addr:              ":" + mainPort,
-		Handler:           h,
-		TLSConfig:         nil,
-		ReadTimeout:       1 * time.Second,
-		ReadHeaderTimeout: 1 * time.Second,
-		WriteTimeout:      1 * time.Second,
-		IdleTimeout:       1 * time.Second,
-		MaxHeaderBytes:    222,
-		TLSNextProto:      nil,
-		ConnState:         connState,
-		ErrorLog:          log.Default(),
-		BaseContext:       nil,
-		ConnContext:       nil,
+		Addr:                         ":" + mainPort,
+		Handler:                      h,
+		TLSConfig:                    nil,
+		ReadTimeout:                  1 * time.Second,
+		ReadHeaderTimeout:            1 * time.Second,
+		WriteTimeout:                 1 * time.Second,
+		IdleTimeout:                  1 * time.Second,
+		MaxHeaderBytes:               222,
+		TLSNextProto:                 nil,
+		ConnState:                    connState,
+		ErrorLog:                     log.Default(),
+		BaseContext:                  nil,
+		ConnContext:                  nil,
+		DisableGeneralOptionsHandler: false,
+		HTTP2:                        nil,
+		Protocols:                    nil,
 	}
 
 	log.Init("-------------- Open http://localhost" + server.Addr + "/myapp --------------")

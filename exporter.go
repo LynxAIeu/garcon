@@ -24,12 +24,26 @@ import (
 // - the Prometheus namespace.
 type ServerName string
 
+// FingerprintExplanation provides a description of the logged HTTP headers.
+const FingerprintExplanation = `
+1. Accept-Language, the language preferred by the user. 
+2. User-Agent, name and version of the browser and OS. 
+3. R=Referer, the website from which the request originated. 
+4. A=Accept, the content types the browser prefers. 
+5. E=Accept-Encoding, the compression formats the browser supports. 
+6. Connection, can be empty, "keep-alive" or "close". 
+7. Cache-Control, how the browser is caching data. 
+8. URI=Upgrade-Insecure-Requests, the browser can upgrade from HTTP to HTTPS. 
+9. Via avoids request loops and identifies protocol capabilities. 
+10. Authorization or Cookie (both should not be present at the same time). 
+11. DNT (Do Not Track) is being dropped by web browsers.`
+
 func (ns ServerName) String() string {
 	return string(ns)
 }
 
 // RespectPromNamingRule verifies Prom naming rules for namespace and fixes it if necessary.
-// valid namespace = [a-zA-Z][a-zA-Z0-9_]*
+// Valid namespace = [a-zA-Z][a-zA-Z0-9_]*
 // https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels
 func (ns ServerName) RespectPromNamingRule() ServerName {
 	str := ns.String()
@@ -51,6 +65,8 @@ func (ns ServerName) ConnState() func(net.Conn, http.ConnState) {
 
 	return func(_ net.Conn, cs http.ConnState) {
 		switch cs {
+		default:
+			fallthrough
 		// StateNew: the client just connects, the server expects its request.
 		// Transition to either StateActive or StateClosed.
 		case http.StateNew:
@@ -80,42 +96,9 @@ func (ns ServerName) ConnState() func(net.Conn, http.ConnState) {
 	}
 }
 
-func (ns ServerName) newSummaryVec(name, help string, labels ...string) *prometheus.SummaryVec {
-	return promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Namespace:   string(ns),
-		Subsystem:   "http",
-		Name:        name,
-		Help:        help,
-		ConstLabels: nil,
-		Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-		MaxAge:      24 * time.Hour,
-		AgeBuckets:  0,
-		BufCap:      0,
-	}, labels)
-}
-
-func (ns ServerName) newGauge(name, help string) prometheus.Gauge {
-	return promauto.NewGauge(prometheus.GaugeOpts{
-		Namespace:   string(ns),
-		Subsystem:   "http",
-		Name:        name,
-		Help:        help,
-		ConstLabels: nil,
-	})
-}
-
-func (ns ServerName) newCounter(name, help string) prometheus.Counter {
-	return promauto.NewCounter(prometheus.CounterOpts{
-		Namespace:   string(ns),
-		Subsystem:   "http",
-		Name:        name,
-		Help:        help,
-		ConstLabels: nil,
-	})
-}
-
 type statusRecorder struct {
 	http.ResponseWriter
+
 	StatusCode int
 }
 
@@ -166,13 +149,11 @@ func MiddlewareLogDurationSafe(next http.Handler) http.Handler {
 	log.Info("MiddlewareLogDurationSafe: logs requester IP, sanitized URL and duration")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		record := &statusRecorder{ResponseWriter: w, StatusCode: http.StatusOK}
-
 		start := time.Now()
 		next.ServeHTTP(w, r)
 		d := time.Since(start)
 
-		code := StatusCodeStr(record.StatusCode)
+		code := StatusCodeStr(http.StatusOK)
 		log.Out(ipMethodURLDurationSafe(r, code, d))
 	})
 }
@@ -330,6 +311,40 @@ func serveEndpoints(addr string, options ...ProbeOption) {
 	log.Panic(err)
 }
 
+func (ns ServerName) newSummaryVec(name, help string, labels ...string) *prometheus.SummaryVec {
+	return promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Namespace:   string(ns),
+		Subsystem:   "http",
+		Name:        name,
+		Help:        help,
+		ConstLabels: nil,
+		Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+		MaxAge:      24 * time.Hour,
+		AgeBuckets:  0,
+		BufCap:      0,
+	}, labels)
+}
+
+func (ns ServerName) newGauge(name, help string) prometheus.Gauge {
+	return promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace:   string(ns),
+		Subsystem:   "http",
+		Name:        name,
+		Help:        help,
+		ConstLabels: nil,
+	})
+}
+
+func (ns ServerName) newCounter(name, help string) prometheus.Counter {
+	return promauto.NewCounter(prometheus.CounterOpts{
+		Namespace:   string(ns),
+		Subsystem:   "http",
+		Name:        name,
+		Help:        help,
+		ConstLabels: nil,
+	})
+}
+
 // newExporterHandler exports the metrics by processing
 // the Prometheus requests on the "/metrics" endpoint.
 func newExporterHandler(options ...ProbeOption) http.Handler {
@@ -398,22 +413,8 @@ func ipMethodURLDurationSafe(r *http.Request, statusCode string, d time.Duration
 		gg.Sanitize(r.RequestURI) + " " + d.String()
 }
 
-// FingerprintExplanation provides a description of the logged HTTP headers.
-const FingerprintExplanation = `
-1. Accept-Language, the language preferred by the user. 
-2. User-Agent, name and version of the browser and OS. 
-3. R=Referer, the website from which the request originated. 
-4. A=Accept, the content types the browser prefers. 
-5. E=Accept-Encoding, the compression formats the browser supports. 
-6. Connection, can be empty, "keep-alive" or "close". 
-7. Cache-Control, how the browser is caching data. 
-8. URI=Upgrade-Insecure-Requests, the browser can upgrade from HTTP to HTTPS. 
-9. Via avoids request loops and identifies protocol capabilities. 
-10. Authorization or Cookie (both should not be present at the same time). 
-11. DNT (Do Not Track) is being dropped by web browsers.`
-
 // fingerprint logs like logIPMethodURL and also logs the browser fingerprint.
-// Attention! fingerprint provides personal data that may identify users.
+// Attention! Fingerprint provides personal data that may identify users.
 // To comply with GDPR, the website data owner must have a legitimate reason to do so.
 // Before enabling the fingerprinting, the user must understand it
 // and give their freely-given informed consent such as the settings change from "no" to "yes".

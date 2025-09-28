@@ -22,6 +22,16 @@ const (
 	surrogateMax = 0xDFFF
 )
 
+//nolint:gochecknoglobals // set at startup time, used as constant during runtime
+var hasherKey = RandomBytes(32)
+
+// NewHash is based on HighwayHash, a hashing algorithm enabling high speed (especially on AMD64).
+// See the study on HighwayHash and some other hash functions: https://github.com/fwessels/HashCompare
+func NewHash() (hash.Hash, error) {
+	h, err := highwayhash.New64(hasherKey)
+	return h, err
+}
+
 // Sanitize replaces control codes by the tofu symbol
 // and invalid UTF-8 codes by the replacement character.
 // Sanitize can be used to prevent log injection.
@@ -72,12 +82,12 @@ func FastSanitize(str string) string {
 }
 
 // SplitCleanedLines splits on linefeed,
-// drops redundant blank lines,
 // replaces the non-printable runes by spaces,
-// trims leading/trailing/redundant spaces,.
+// trims leading/trailing/redundant spaces,
+// and drops redundant blank lines.
 func SplitCleanedLines(str string) []string {
 	// count number of lines in the returned txt
-	count, length, max := 1, 0, 0
+	count, length, maxi := 1, 0, 0
 	r1, r2 := '\n', '\n'
 	for _, r0 := range str {
 		if r0 == '\r' {
@@ -88,8 +98,8 @@ func SplitCleanedLines(str string) []string {
 				continue // skip redundant line feeds
 			}
 			count++
-			if max < length {
-				max = length // max line length
+			if maxi < length {
+				maxi = length // max line length
 			}
 			length = 0
 		}
@@ -98,7 +108,7 @@ func SplitCleanedLines(str string) []string {
 	}
 
 	txt := make([]string, 0, count)
-	line := make([]rune, 0, max)
+	line := make([]rune, 0, maxi)
 
 	r1, r2 = '\n', '\n'
 	wasSpace := true
@@ -223,7 +233,7 @@ func Printable(array ...string) int {
 // a Carriage Return "\r", or a Line Feed "\n",
 // or any other ASCII control code (except space),
 // or, as well as, an invalid UTF-8 code.
-// printable returns -1 if the string
+// Printable returns -1 if the string
 // is safely printable preventing log injection.
 func printable(s string) int {
 	for p, r := range s {
@@ -236,20 +246,11 @@ func printable(s string) int {
 
 func RandomBytes(n int) []byte {
 	b := make([]byte, n)
-	if _, err := rand.Read(b); err != nil {
+	_, err := rand.Read(b)
+	if err != nil {
 		log.Panicf("RandomBytes(%d) %s", n, err)
 	}
 	return b
-}
-
-//nolint:gochecknoglobals // set at startup time, used as constant during runtime
-var hasherKey = RandomBytes(32)
-
-// NewHash is based on HighwayHash, a hashing algorithm enabling high speed (especially on AMD64).
-// See the study on HighwayHash and some other hash functions: https://github.com/fwessels/HashCompare
-func NewHash() (hash.Hash, error) {
-	h, err := highwayhash.New64(hasherKey)
-	return h, err
 }
 
 // Obfuscate hashes the input string to prevent logging sensitive information.

@@ -31,15 +31,15 @@ func Test_extIndex(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c // parallel test
+		// parallel test
 
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
 			extPos := extIndex(c.path)
-			max := len(c.path)
-			if extPos < 0 || extPos > max {
-				t.Errorf("extIndex() = %v out of range [0..%v]", extPos, max)
+			maxi := len(c.path)
+			if extPos < 0 || extPos > maxi {
+				t.Errorf("extIndex() = %v out of range [0..%v]", extPos, maxi)
 			}
 
 			got := c.path[extPos:]

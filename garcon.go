@@ -25,8 +25,6 @@ import (
 	"github.com/LM4eu/incorruptible"
 )
 
-var log = emo.NewZone("garcon")
-
 type Garcon struct {
 	ServerName     ServerName
 	Writer         gg.Writer
@@ -37,7 +35,9 @@ type Garcon struct {
 	devMode        bool
 }
 
-func (g Garcon) IsDevMode() bool { return g.devMode }
+var log = emo.NewZone("garcon")
+
+func (g *Garcon) IsDevMode() bool { return g.devMode }
 
 func New(opts ...Option) *Garcon {
 	var g Garcon
@@ -67,6 +67,7 @@ func New(opts ...Option) *Garcon {
 		baseURL := g.urls[0].String()
 		if !strings.HasPrefix(g.docURL, baseURL) &&
 			!strings.Contains(g.docURL, "://") {
+
 			g.docURL = baseURL + g.docURL
 		}
 	}
@@ -202,8 +203,8 @@ func (g *Garcon) IncorruptibleChecker(secretKeyHex string, maxAge int, setIP boo
 	return g.IncorruptibleCheckerBin(key, maxAge, setIP)
 }
 
-// IncorruptibleChecker uses cookies based the fast and tiny Incorruptible token.
-// IncorruptibleChecker requires g.WithURLs() to set the Cookie secure, domain and path.
+// IncorruptibleCheckerBin uses cookies based the fast and tiny Incorruptible token.
+// IncorruptibleCheckerBin requires g.WithURLs() to set the Cookie secure, domain and path.
 func (g *Garcon) IncorruptibleCheckerBin(secretKeyBin []byte, maxAge int, setIP bool) *incorruptible.Incorruptible {
 	if len(secretKeyBin) != 16 {
 		log.Panic("Want AES-128 key composed by 16 bytes, but got", len(secretKeyBin), "bytes")

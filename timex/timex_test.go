@@ -83,8 +83,6 @@ func TestParseDuration(t *testing.T) {
 	t.Parallel()
 
 	for _, c := range parseDurationTests {
-		c := c
-
 		t.Run(c.in, func(t *testing.T) {
 			t.Parallel()
 
@@ -128,8 +126,6 @@ func TestParseDurationErrors(t *testing.T) {
 	t.Parallel()
 
 	for _, c := range parseDurationErrorTests {
-		c := c
-
 		t.Run(c.in, func(t *testing.T) {
 			t.Parallel()
 
@@ -149,7 +145,7 @@ func TestParseDurationRoundTrip(t *testing.T) {
 	t.Parallel()
 
 	const maxLoops = 100
-	for i := 0; i < maxLoops; i++ {
+	for range maxLoops {
 		// Resolutions finer than milliseconds will result in imprecise round-trips.
 		ns := rand.IntN(WeekNs) % MillisecondNs
 		name := strconv.Itoa(ns) + "ns"
@@ -182,8 +178,6 @@ func TestStringifyTime(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -198,18 +192,16 @@ func TestParseTime(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
+		want   time.Time
 		name   string
 		in     string
-		want   time.Time
 		wantOK bool
 	}{
-		{"zero", "", time.Time{}, true},
-		{"err", "not-a-date", time.Time{}, false},
+		{time.Time{}, "zero", "", true},
+		{time.Time{}, "err", "not-a-date", false},
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -250,8 +242,6 @@ func TestConsumeDigits(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -259,23 +249,23 @@ func TestConsumeDigits(t *testing.T) {
 
 			if ok := (err == nil); ok != c.wantOK {
 				if !ok {
-					t.Error("consumeDigits() err:", err)
+					t.Errorf("consumeDigits() in=%q err: %v", c.in, err)
 				}
-				t.Errorf("consumeDigits() ok = %v, wantOK = %v", ok, c.wantOK)
+				t.Errorf("consumeDigits() in=%q  gotOK=%v, want = %v", c.in, ok, c.wantOK)
 				return
 			}
 
 			if gotI != c.wantI {
-				t.Errorf("consumeDigits() gotI = %v, want %v", gotI, c.wantI)
+				t.Errorf("consumeDigits() in=%q gotI %v, want %v", c.in, gotI, c.wantI)
 			}
 			if gotValue != c.wantValue {
-				t.Errorf("consumeDigits() gotValue = %v, want %v", gotValue, c.wantValue)
+				t.Errorf("consumeDigits() in=%q gotValue %v, want %v", c.in, gotValue, c.wantValue)
 			}
 			if gotFraction != c.wantFraction {
-				t.Errorf("consumeDigits() gotFraction = %v, want %v", gotFraction, c.wantFraction)
+				t.Errorf("consumeDigits() in=%q gotFraction %v, want %v", c.in, gotFraction, c.wantFraction)
 			}
 			if gotScale != c.wantScale {
-				t.Errorf("consumeDigits() gotScale = %v, want %v", gotScale, c.wantScale)
+				t.Errorf("consumeDigits() in=%q gotScale %v, want %v", c.in, gotScale, c.wantScale)
 			}
 		})
 	}
@@ -300,8 +290,6 @@ func TestConsumeUnit(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -345,8 +333,6 @@ func TestComputeNanoseconds(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -384,26 +370,24 @@ func TestIntegralPart(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
 			gotV, gotI, err := integralPart(c.in)
 
-			if ok := (err == nil); ok != c.wantOK {
-				if !ok {
-					t.Error("integralPart() err:", err)
-				}
-				t.Errorf("integralPart() ok = %v, wantOK = %v", ok, c.wantOK)
+			ok := (err == nil)
+			if ok != c.wantOK {
+				t.Errorf("integralPart() in=%q gotOK %v, want %v, err %v", c.in, ok, c.wantOK, err)
+			}
+			if !ok {
 				return
 			}
 
 			if gotV != c.wantV {
-				t.Errorf("integralPart() gotV = %v, want %v", gotV, c.wantV)
+				t.Errorf("integralPart() in=%q gotV %v, want %v", c.in, gotV, c.wantV)
 			}
 			if gotI != c.wantI {
-				t.Errorf("integralPart() gotI = %v, want %v", gotI, c.wantI)
+				t.Errorf("integralPart() in=%q gotI %v, want %v", c.in, gotI, c.wantI)
 			}
 		})
 	}
@@ -432,8 +416,6 @@ func TestFractionalPart(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -505,8 +487,6 @@ func TestDStr(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.in, func(t *testing.T) {
 			t.Parallel()
 
@@ -552,8 +532,6 @@ func TestDT(t *testing.T) {
 	})
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.in, func(t *testing.T) {
 			t.Parallel()
 

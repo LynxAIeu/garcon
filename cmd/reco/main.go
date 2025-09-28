@@ -58,10 +58,10 @@ func main() {
 		return
 	}
 
-	min, arithmeticMean, variance := minAverageVariance(durations, geometricMean)
+	mini, arithmeticMean, variance := minAverageVariance(durations, geometricMean)
 
 	mean := geometricMean
-	for i := 0; i < 99; i++ {
+	for i := range 99 {
 		previous := mean
 		mean = weightGeometricMean(durations, previous, variance, false)
 		diff := math.Abs(mean - previous)
@@ -76,7 +76,7 @@ func main() {
 
 	weightedGeometricMean := time.Duration(mean)
 	log.Resultf("%d loops: Min %v WeightedGeometricMean %v GeometricMean %v ±%v ArithmeticMean %v",
-		len(durations), min, weightedGeometricMean, time.Duration(geometricMean), time.Duration(variance), arithmeticMean)
+		len(durations), mini, weightedGeometricMean, time.Duration(geometricMean), time.Duration(variance), arithmeticMean)
 }
 
 func compress(loops int, buf []byte, fn, ext string, level int) (durations []time.Duration, geometricMean float64) {
@@ -84,7 +84,7 @@ func compress(loops int, buf []byte, fn, ext string, level int) (durations []tim
 	var sum float64
 	var count int
 
-	for i := 0; i < loops; i++ {
+	for i := range loops {
 		d := gg.Compress(buf, fn, ext, level)
 		if d <= 0 {
 			log.Fatalf("Duration=%v must be > 0", d)
@@ -124,12 +124,12 @@ func compress(loops int, buf []byte, fn, ext string, level int) (durations []tim
 	return durations, geometricMean
 }
 
-func minAverageVariance(durations []time.Duration, geometricMean float64) (min, arithmeticMean time.Duration, variance float64) {
+func minAverageVariance(durations []time.Duration, geometricMean float64) (mini, arithmeticMean time.Duration, variance float64) {
 	var sum time.Duration
 	var delta2Sum float64
 	for _, d := range durations {
-		if d < min || min == 0 {
-			min = d
+		if d < mini || mini == 0 {
+			mini = d
 		}
 		sum += d
 		delta := (float64(d) - geometricMean)
@@ -142,12 +142,12 @@ func minAverageVariance(durations []time.Duration, geometricMean float64) (min, 
 	variance = math.Sqrt(variance2)
 	log.Tracef("geometricMean %v variance %v", time.Duration(geometricMean), time.Duration(variance))
 
-	return
+	return mini, arithmeticMean, variance
 }
 
 func weightGeometricMean(durations []time.Duration, mean, variance float64, doLog bool) float64 {
 	var sumLogs, sumWeights float64
-	min := timex.Year
+	mini := timex.Year
 
 	for _, d := range durations {
 		var weight float64
@@ -165,16 +165,16 @@ func weightGeometricMean(durations []time.Duration, mean, variance float64, doLo
 		sumLogs += weight * math.Log(float64(d))
 		sumWeights += weight
 
-		if min > d {
-			min = d
+		if mini > d {
+			mini = d
 		}
 	}
 
 	mean = math.Exp(sumLogs / sumWeights)
 
-	if mean < float64(min) {
-		log.Warningf("weightedGeometricMean < Min: %v -> %v", time.Duration(mean), min)
-		return float64(min)
+	if mean < float64(mini) {
+		log.Warningf("weightedGeometricMean < Min: %v -> %v", time.Duration(mean), mini)
+		return float64(mini)
 	}
 
 	return mean

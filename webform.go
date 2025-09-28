@@ -16,7 +16,6 @@ import (
 type WebForm struct {
 	Writer   gg.Writer
 	Notifier gg.Notifier
-	Redirect string
 
 	// TextLimits are used as security limits
 	// to avoid being flooded by large web forms
@@ -35,6 +34,8 @@ type WebForm struct {
 	// Zero (or negative) value for unlimited file size.
 	FileLimits map[string][2]int
 
+	Redirect string
+
 	// MaxBodyBytes limits someone hogging the host resources.
 	// Zero (or negative) value disables this security check.
 	MaxBodyBytes int64
@@ -45,6 +46,12 @@ type WebForm struct {
 
 	maxFieldNameLength int
 }
+
+// Markdown encoding.
+const (
+	lineBreak    = "  " // trailing double space -> line break
+	bulletIndent = " "  // leading spaces -> bullet indent
+)
 
 func (g *Garcon) NewContactForm(redirectURL string) WebForm {
 	return NewContactForm(g.Writer, redirectURL)
@@ -84,32 +91,6 @@ func DefaultFileSettings() map[string][2]int {
 	}
 }
 
-func (wf *WebForm) init() {
-	if wf.TextLimits == nil {
-		wf.TextLimits = DefaultContactSettings()
-		log.Info("Middleware WebForm: empty TextLimits => use", wf.TextLimits)
-	}
-
-	if wf.FileLimits == nil {
-		wf.FileLimits = DefaultFileSettings()
-		log.Info("Middleware WebForm: empty FileLimits => use", wf.FileLimits)
-	}
-
-	wf.maxFieldNameLength = 0
-	for name := range wf.TextLimits {
-		if wf.maxFieldNameLength < len(name) {
-			wf.maxFieldNameLength = len(name)
-		}
-	}
-	for name := range wf.FileLimits {
-		if wf.maxFieldNameLength < len(name) {
-			wf.maxFieldNameLength = len(name)
-		}
-	}
-
-	log.Info("Middleware WebForm redirects to", wf.Redirect)
-}
-
 // Notify returns a handler that
 // converts the received web-form into markdown format
 // and sends it to the notifierURL.
@@ -140,6 +121,32 @@ func (wf *WebForm) Notify(notifierURL string) func(w http.ResponseWriter, r *htt
 	}
 }
 
+func (wf *WebForm) init() {
+	if wf.TextLimits == nil {
+		wf.TextLimits = DefaultContactSettings()
+		log.Info("Middleware WebForm: empty TextLimits => use", wf.TextLimits)
+	}
+
+	if wf.FileLimits == nil {
+		wf.FileLimits = DefaultFileSettings()
+		log.Info("Middleware WebForm: empty FileLimits => use", wf.FileLimits)
+	}
+
+	wf.maxFieldNameLength = 0
+	for name := range wf.TextLimits {
+		if wf.maxFieldNameLength < len(name) {
+			wf.maxFieldNameLength = len(name)
+		}
+	}
+	for name := range wf.FileLimits {
+		if wf.maxFieldNameLength < len(name) {
+			wf.maxFieldNameLength = len(name)
+		}
+	}
+
+	log.Info("Middleware WebForm redirects to", wf.Redirect)
+}
+
 func (wf *WebForm) toMarkdown(r *http.Request) string {
 	log.Infof("WebForm with %d input fields", len(r.Form))
 	md := wf.formMD(r.Form) + FingerprintMD(r)
@@ -158,8 +165,8 @@ func (wf *WebForm) formMD(fields url.Values) string {
 			continue
 		}
 
-		max, ok := wf.TextLimits[name]
-		maxLen, maxLines := max[0], max[1]
+		maxi, ok := wf.TextLimits[name]
+		maxLen, maxLines := maxi[0], maxi[1]
 		if !ok {
 			log.Warningf("WebForm: reject name=%s not in allowlist", name)
 			continue
@@ -224,19 +231,13 @@ func (wf *WebForm) validName(name string) bool {
 }
 
 // overflow25 returns the overflow if n is 25% above max, else returns zero.
-// max=0 means max is infinite.
-func overflow25(n, max int) int {
-	if (n > max+max/4) && (max > 0) {
-		return n - max
+// Max=0 means max is infinite.
+func overflow25(n, maxi int) int {
+	if (n > maxi+maxi/4) && (maxi > 0) {
+		return n - maxi
 	}
 	return 0
 }
-
-// Markdown encoding.
-const (
-	lineBreak    = "  " // trailing double space -> line break
-	bulletIndent = " "  // leading spaces -> bullet indent
-)
 
 func (wf *WebForm) bulletParagraph(str string, maxLines int) string {
 	md := ""

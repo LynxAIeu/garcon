@@ -302,7 +302,7 @@ func unmarshalJSON[T json.Unmarshaler](w http.ResponseWriter, statusErr string, 
 }
 
 // decodeJSON decodes the JSON body of either a request or a response.
-// decodeJSON does not use son.NewDecoder(body).Decode(msg)
+// DecodeJSON does not use son.NewDecoder(body).Decode(msg)
 // because we want to read again the body in case of error.
 func decodeJSON(w http.ResponseWriter, statusErr string, body io.ReadCloser, header http.Header, msg any, maxBytes ...int) error {
 	buf, err := readBodyAndError(w, statusErr, body, header, maxBytes...)
@@ -331,33 +331,32 @@ func readBodyAndError(w http.ResponseWriter, statusErr string, body io.ReadClose
 	return buf, nil
 }
 
-const defaultMaxBytes = 80_000 // 80 KB should be enough for most of the cases
-
 // readBody reads up to maxBytes.
 func readBody(w http.ResponseWriter, body io.ReadCloser, maxBytes ...int) ([]byte, error) {
-	max := defaultMaxBytes // optional parameter
+	const defaultMaxBytes = 80_000 // 80 KB should be enough for most of the cases
+	maxi := defaultMaxBytes        // optional parameter
 	if len(maxBytes) > 0 {
-		max = maxBytes[0]
+		maxi = maxBytes[0]
 	}
 
-	if max > 0 { // protect against body abnormally too large
-		body = http.MaxBytesReader(w, body, int64(max))
+	if maxi > 0 { // protect against body abnormally too large
+		body = http.MaxBytesReader(w, body, int64(maxi))
 	}
 
 	buf, err := io.ReadAll(body)
 	if err != nil {
-		return nil, fmt.Errorf("body (max=%s): %w", ConvertSize(max), err)
+		return nil, fmt.Errorf("body (max=%s): %w", ConvertSize(maxi), err)
 	}
 
 	// check limit
-	nearTheLimit := (max - len(buf)) < max/2
+	nearTheLimit := (maxi - len(buf)) < maxi/2
 	readManyBytes := len(buf) > 8*defaultMaxBytes
 	if nearTheLimit || readManyBytes {
-		percentage := 100 * len(buf) / max
+		percentage := 100 * len(buf) / maxi
 		if nearTheLimit {
-			log.Warnf("body: read %s = %d%% of the limit %s, please increase maxBytes=%d", ConvertSize(len(buf)), percentage, ConvertSize(max), max)
+			log.Warnf("body: read %s = %d%% of the limit %s, please increase maxBytes=%d", ConvertSize(len(buf)), percentage, ConvertSize(maxi), maxi)
 		} else {
-			log.Infof("body: read many bytes %s but only %d%% of the limit %s (%d bytes)", ConvertSize(len(buf)), percentage, ConvertSize(max), max)
+			log.Infof("body: read many bytes %s but only %d%% of the limit %s (%d bytes)", ConvertSize(len(buf)), percentage, ConvertSize(maxi), maxi)
 		}
 	}
 

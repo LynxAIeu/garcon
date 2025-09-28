@@ -30,9 +30,10 @@ type (
 	Keys map[string]string
 )
 
-// Garcon settings
+// Garcon settings.
 const (
-	burst, perMinute = 2, 5
+	burst     = 2
+	perMinute = 5
 )
 
 var (
@@ -49,7 +50,7 @@ func main() {
 
 	addr := "http://localhost:" + strconv.Itoa(mainPort)
 
-	g := garcon.New(
+	gars := garcon.New(
 		garcon.WithServerName("KeyStore"),
 		garcon.WithURLs(addr),
 		garcon.WithDocURL("/doc"),
@@ -57,7 +58,7 @@ func main() {
 		garcon.WithDev(!*prod),
 	)
 
-	middleware, connState := g.StartExporter(expPort,
+	middleware, connState := gars.StartExporter(expPort,
 		garcon.WithLivenessProbes(func() []byte { return nil }),
 		garcon.WithLivenessProbes(func() []byte { return nil }),
 		garcon.WithLivenessProbes(func() []byte { return nil }),
@@ -65,14 +66,14 @@ func main() {
 		garcon.WithReadinessProbes(func() []byte { return []byte("fail") }))
 
 	middleware = middleware.Append(
-		g.MiddlewareRejectUnprintableURI(),
-		g.MiddlewareLogRequest(),
-		g.MiddlewareRateLimiter(burst, perMinute),
-		g.MiddlewareServerHeader("KeyStore"),
-		g.MiddlewareCORS())
+		gars.MiddlewareRejectUnprintableURI(),
+		gars.MiddlewareLogRequest(),
+		gars.MiddlewareRateLimiter(burst, perMinute),
+		gars.MiddlewareServerHeader("KeyStore"),
+		gars.MiddlewareCORS())
 
 	// handles both REST API and static web files
-	r := router(g)
+	r := router(gars)
 	h := middleware.Then(r)
 
 	server := garcon.Server(h, mainPort, connState)
@@ -162,8 +163,8 @@ func (db *db) post(w http.ResponseWriter, r *http.Request) {
 	result := make(Keys, len(values))
 	for name, vals := range values {
 		{
-			v, ok := keys[name]
-			if ok && vals[0] == "" {
+			v, okk := keys[name]
+			if okk && vals[0] == "" {
 				result[name] = v
 			}
 		}

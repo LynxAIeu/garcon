@@ -16,6 +16,19 @@ import (
 	"github.com/klauspost/compress/zstd"
 )
 
+type (
+	// NoCompression is just to avoid the file being closed twice (when no compression).
+	noCompression struct {
+		io.Writer
+	}
+
+	// FakeRClose is required because gzip.NewReader() is the single encoder requiring to be explicitly closed.
+	// That's a pity because gzip.z.Close() only returns z.decompressor.err :-(.
+	fakeRClose struct {
+		io.Reader
+	}
+)
+
 const (
 	BrotliExt = ".br"
 	Bzip2Ext  = ".bz2"
@@ -23,6 +36,10 @@ const (
 	S2Ext     = ".s2" // S2 is a Snappy extension
 	ZStdExt   = ".zst"
 )
+
+func (*noCompression) Close() error { return nil }
+
+func (*fakeRClose) Close() error { return nil }
 
 func SupportedEncoders() []string { return []string{BrotliExt, GZipExt, S2Ext, ZStdExt} }
 func SupportedDecoders() []string { return []string{BrotliExt, GZipExt, S2Ext, ZStdExt, Bzip2Ext} }
@@ -43,17 +60,20 @@ func Compress(buf []byte, fn, ext string, level int) time.Duration {
 	}
 
 	ok := true
-	if _, err := enc.Write(buf); err != nil {
+	_, err = enc.Write(buf)
+	if err != nil {
 		log.Warnf("Write() %v: %v", ext, err)
 		ok = false
 	}
 
-	if err := enc.Close(); err != nil {
+	err = enc.Close()
+	if err != nil {
 		log.Warnf("Close() %v: %v", ext, err)
 		ok = false
 	}
 
-	if err := file.Close(); err != nil {
+	err = file.Close()
+	if err != nil {
 		log.Warnf("Cannot close file %q because %v", fn, err)
 		ok = false
 	}
@@ -73,7 +93,8 @@ func Decompress(fn, ext string) []byte {
 	}
 
 	defer func() {
-		if e := file.Close(); e != nil {
+		e := file.Close()
+		if e != nil {
 			log.Error("File Close() err:", e)
 		}
 	}()
@@ -81,7 +102,8 @@ func Decompress(fn, ext string) []byte {
 	reader := decoder(fn, ext, file)
 
 	defer func() {
-		if e := reader.Close(); e != nil {
+		e := reader.Close()
+		if e != nil {
 			log.Error("File Close() err:", e)
 		}
 	}()
@@ -139,11 +161,11 @@ func GZipCompressor(file *os.File, level int) (io.WriteCloser, error) {
 
 func S2Compressor(file *os.File, level int) io.WriteCloser {
 	switch level {
-	case 1:
-		return s2.NewWriter(file, s2.WriterUncompressed())
 	default:
 		log.Printf("Change S2 level=%d to default compression level: Fast=2", level)
-		fallthrough
+		return s2.NewWriter(file)
+	case 1:
+		return s2.NewWriter(file, s2.WriterUncompressed())
 	case 2:
 		return s2.NewWriter(file)
 	case 3:
@@ -202,18 +224,3 @@ func decoder(fn, ext string, file *os.File) io.ReadCloser {
 		return &fakeRClose{file} // file will already be closed by caller
 	}
 }
-
-// noCompression is just to avoid the file being closed twice (when no compression).
-type noCompression struct {
-	io.Writer
-}
-
-func (*noCompression) Close() error { return nil }
-
-// fakeRClose is required because gzip.NewReader() is the single encoder requiring to be explicitly closed.
-// That's a pity because gzip.z.Close() only returns z.decompressor.err :-(.
-type fakeRClose struct {
-	io.Reader
-}
-
-func (*fakeRClose) Close() error { return nil }

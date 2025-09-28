@@ -14,6 +14,15 @@ import (
 	"github.com/LM4eu/garcon/gg"
 )
 
+type corsLogger struct{}
+
+func (corsLogger) Printf(fmt string, a ...any) {
+	if strings.Contains(fmt, "Actual request") {
+		return
+	}
+	log.Securityf("CORS "+fmt, a...)
+}
+
 // MiddlewareCORS is a middleware to handle Cross-Origin Resource Sharing (CORS).
 func (g *Garcon) MiddlewareCORS() gg.Middleware {
 	return g.MiddlewareCORSWithMethodsHeaders(nil, nil)
@@ -31,15 +40,6 @@ func MiddlewareCORS(allowedOrigins, methods, headers []string, debug bool) func(
 		c.Log = corsLogger{}
 	}
 	return c.Handler
-}
-
-type corsLogger struct{}
-
-func (corsLogger) Printf(fmt string, a ...any) {
-	if strings.Contains(fmt, "Actual request") {
-		return
-	}
-	log.Securityf("CORS "+fmt, a...)
 }
 
 // DevOrigins provides the development origins:
@@ -110,6 +110,7 @@ func InsertSchema(urls []string) {
 	for i, u := range urls {
 		if !strings.HasPrefix(u, "https://") &&
 			!strings.HasPrefix(u, "http://") {
+
 			urls[i] = "http://" + u
 		}
 	}

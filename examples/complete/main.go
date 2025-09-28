@@ -20,11 +20,9 @@ import (
 	"github.com/LM4eu/emo"
 )
 
-// Garcon settings
+// Garcon settings.
 const (
-	opaFile = "examples/sample-auth.rego"
-
-	// the HMAC-SHA256 key to decode JWT (do not put your secret keys in your code)
+	// The HMAC-SHA256 key to decode JWT (do not put your secret keys in your code).
 	hmacSHA256 = "9d2e0a02121179a3c3de1b035ae1355b1548781c8ce8538a1dc0853a12dfb13d"
 	aes128bits = "00112233445566778899aabbccddeeff"
 )
@@ -95,7 +93,7 @@ func main() {
 
 	log.Init("-------------- Open http://localhost" + server.Addr + "/myapp --------------")
 	err := garcon.ListenAndServe(&server)
-	log.Fatal(err)
+	log.Error(err)
 }
 
 // handler creates the mapping between the endpoints and the handler functions.

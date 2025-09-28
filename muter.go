@@ -15,11 +15,16 @@ import (
 // Muter uses the Hysteresis principle: https://wikiless.org/wiki/Hysteresis
 // Similar wording: quieter, stopper, limiter, reducer, inhibitor, mouth-closer.
 type Muter struct {
-	// Threshold is the level enabling the muted state.
-	Threshold int
+	// quietTime is the first call of successive Decrement()
+	// without any Increment(). quietTime is used to
+	// inform the time since no Increment() has been called.
+	quietTime time.Time
 
 	// NoAlertDuration allows to consider the verbosity is back to normal.
 	NoAlertDuration time.Duration
+
+	// Threshold is the level enabling the muted state.
+	Threshold int
 
 	// RemindMuteState allows to remind the state is still muted.
 	// Set value 100 to send this reminder every 100 increments.
@@ -29,16 +34,11 @@ type Muter struct {
 	// counter is incremented/decremented, but is never negative.
 	counter int
 
-	// muted represent the Muter state.
-	muted bool
-
-	// quietTime is the first call of successive Decrement()
-	// without any Increment(). quietTime is used to
-	// inform the time since no Increment() has been called.
-	quietTime time.Time
-
 	// dropped is the number of Increment() calls after state became muted.
 	dropped int
+
+	// muted represent the Muter state.
+	muted bool
 }
 
 // Increment increments the internal counter and returns false when in muted state.

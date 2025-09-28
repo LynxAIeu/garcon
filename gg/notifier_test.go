@@ -11,6 +11,8 @@ import (
 )
 
 func TestNotifier_Notify(t *testing.T) {
+	t.Parallel()
+
 	url := "https://framateam.org/hooks/your-mattermost-hook-url"
 	n := gg.NewNotifier(url)
 	err := n.Notify("Hello, world!")

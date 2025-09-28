@@ -38,8 +38,6 @@ func TestExtractWords(t *testing.T) {
 		{"not-found", "aaaa,g,h,i'j,kkkkkkkkkkkk", clone(dico), []string{}},
 	}
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 

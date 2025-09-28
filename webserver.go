@@ -156,12 +156,14 @@ func (ws *StaticWebServer) send(w http.ResponseWriter, r *http.Request, absPath 
 	}
 
 	defer func() {
-		if e := file.Close(); e != nil {
+		e := file.Close()
+		if e != nil {
 			log.Warn("WebServer: Close()", e)
 		}
 	}()
 
-	if fi, err := file.Stat(); err != nil {
+	fi, err := file.Stat()
+	if err != nil {
 		log.Warn("WebServer: Stat("+absPath+")", err)
 	} else {
 		w.Header().Set("Content-Length", strconv.FormatInt(fi.Size(), 10))
@@ -170,7 +172,8 @@ func (ws *StaticWebServer) send(w http.ResponseWriter, r *http.Request, absPath 
 		// to handle the headers Range If-Range Etag and Content-Range.
 	}
 
-	if n, err := io.Copy(w, file); err != nil {
+	n, err := io.Copy(w, file)
+	if err != nil {
 		log.Warn("WebServer: Copy("+absPath+")", err)
 	} else {
 		log.Out("200", r.RemoteAddr, r.Method, absPath, gg.ConvertSize64(n))
@@ -230,8 +233,8 @@ func extIndex(urlPath string) int {
 }
 
 // imageContentType determines the Content-Type depending on the file extension.
-// Only the image extensions used by Teal.Finance are currently supported.
-// Contact the Teal.Finance team if you need more image file extensions.
+// Only few image extensions are currently supported.
+// PR welcome if you need support for more image file extensions.
 func imageContentType(ext string) string {
 	switch ext {
 	case "png":
@@ -245,9 +248,9 @@ func imageContentType(ext string) string {
 	return ""
 }
 
-// assetContentType currently supports only the files present in the /dist/assets/ folder at Teal.Finance.
-// We may drop ".eot", ".ttf" and ".woff" in the future.
-// Contact the Teal.Finance team if you need to keep all the current file extensions, or if you need other ones.
+// assetContentType currently supports only few file extensions.
+// PR welcome if you need more file extensions.
+// Are you OK if the ".eot", ".ttf" and ".woff" file extensions are deprecated?
 func assetContentType(ext string) string {
 	switch ext {
 	case "css":

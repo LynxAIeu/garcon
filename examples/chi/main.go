@@ -17,9 +17,11 @@ import (
 	"github.com/LM4eu/emo"
 )
 
-var log = emo.NewZone("app")
+var (
+	log = emo.NewZone("app")
 
-var port = ":" + gg.EnvStr("MAIN_PORT", "8086")
+	port = ":" + gg.EnvStr("MAIN_PORT", "8086")
+)
 
 func main() {
 	endpoint := flag.String("post-endpoint", "/", "The endpoint for the POST request.")

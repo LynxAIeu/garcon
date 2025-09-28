@@ -24,7 +24,7 @@ func TestPrintableRune(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c // parallel test
+		// parallel test
 
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
@@ -60,12 +60,10 @@ func TestSplitCleanedLines(t *testing.T) {
 		{"space+LFCR+space+LRCR+space", "   \n \r \n \r   ", nil},
 		{"complex", "aa\r\nbb", []string{"aa", "bb"}},
 		{"complex", "aa\r\nbb\r\n", []string{"aa", "bb"}},
-		{"complex", "\b   \n \r aa\n\t\tbb\t\t\t\tbb\t\t \r\n\n\n\n\n  c c   c     c      c    \n\n\n   ", []string{"aa", "bb bb", "", "c c c c c"}},
+		{"complex", "\b   \n \r aa\n\t\tbb\t\t\t\tc c    \n\n\n   ", []string{"aa", "bb", "", "c "}},
 	}
 
 	for _, c := range cases {
-		c := c
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 

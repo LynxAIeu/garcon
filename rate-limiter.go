@@ -1,5 +1,5 @@
 // Copyright 2021-2025 The contributors of Garcon.
-// This file is part of Garcon, web+API server toolkit under the MIT License.
+// This file is part of Garcon, API and web server under the MIT License.
 // SPDX-License-Identifier: MIT
 
 package garcon
@@ -19,18 +19,27 @@ import (
 
 type (
 	ReqLimiter struct {
-	visitors    map[string]*visitor
-	initLimiter *rate.Limiter
+		visitors    map[string]*visitor
+		initLimiter *rate.Limiter
 		writer      gg.Writer
-	mu          sync.Mutex
-}
+		mu          sync.Mutex
+	}
 
 	visitor struct {
-	lastSeen time.Time
-	limiter  *rate.Limiter
-}
+		lastSeen time.Time
+		limiter  *rate.Limiter
+	}
 )
 
+const (
+	factorInitialNextSleep  = 2
+	factorIncreaseMinSleep  = 32  // higher, the change is slower
+	factorDecreaseMinSleep  = 512 // higher, the change is slower
+	factorIncreaseNextSleep = 2   // higher, the change is faster
+	factorDecreaseNextSleep = 8   // higher, the change is slower
+	maxAlpha                = 16
+	printDebug              = false
+)
 
 func (g *Garcon) MiddlewareRateLimiter(settings ...int) gg.Middleware {
 	var maxReqBurst, maxReqPerMinute int
@@ -86,7 +95,8 @@ func (rl *ReqLimiter) MiddlewareRateLimiter(next http.Handler) http.Handler {
 
 		limiter := rl.getVisitor(ip)
 
-		if err := limiter.Wait(r.Context()); err != nil {
+		err = limiter.Wait(r.Context())
+		if err != nil {
 			if r.Context().Err() == nil {
 				rl.writer.WriteErr(w, r, http.StatusTooManyRequests, "Too Many Requests",
 					"advice", "Please contact the team support is this is annoying")
@@ -155,15 +165,45 @@ func NewAdaptiveRate(name string, d time.Duration) AdaptiveRate {
 	return ar
 }
 
-const (
-	factorInitialNextSleep  = 2
-	factorIncreaseMinSleep  = 32  // higher, the change is slower
-	factorDecreaseMinSleep  = 512 // higher, the change is slower
-	factorIncreaseNextSleep = 2   // higher, the change is faster
-	factorDecreaseNextSleep = 8   // higher, the change is slower
-	maxAlpha                = 16
-	printDebug              = false
-)
+func (ar *AdaptiveRate) Get(symbol, url string, msg any, maxBytes ...int) error {
+	var err error
+	d := ar.NextSleep
+	for try, status := 1, http.StatusTooManyRequests; (try < 88) && (status == http.StatusTooManyRequests || status == http.StatusTeapot); try++ {
+		if try > 1 {
+			previous := d
+			alpha := int64(maxAlpha * ar.MinSleep / d)
+			d *= time.Duration(try)
+			d += time.Duration(alpha) * ar.MinSleep
+			log.Infof("%s Get %s #%d sleep=%s (+%s) alpha=%d n=%s min=%s",
+				ar.Name, symbol, try, d, d-previous, alpha, ar.NextSleep, ar.MinSleep)
+		}
+		time.Sleep(d)
+		status, err = ar.get(symbol, url, msg, maxBytes...)
+	}
+
+	ar.adjust(d)
+
+	return err
+}
+
+func (ar *AdaptiveRate) LogStats() {
+	log.Infof("%s Adjusted sleep durations: min=%s next=%s",
+		ar.Name, ar.MinSleep, ar.NextSleep)
+}
+
+func (ar *AdaptiveRate) logIncrease(prevMin, prevNext time.Duration) {
+	if printDebug {
+		log.Debugf("%s Increase MinSleep=%s (+%s) next=%s (+%s)",
+			ar.Name, ar.MinSleep, ar.MinSleep-prevMin, ar.NextSleep, ar.NextSleep-prevNext)
+	}
+}
+
+func (ar *AdaptiveRate) logDecrease(reduce time.Duration) {
+	if printDebug {
+		log.Debugf("%s Decrease MinSleep=%s (-%s) next=%s",
+			ar.Name, ar.MinSleep, reduce, ar.NextSleep)
+	}
+}
 
 func (ar *AdaptiveRate) adjust(d time.Duration) {
 	const fim = factorIncreaseMinSleep - 1
@@ -189,27 +229,6 @@ func (ar *AdaptiveRate) adjust(d time.Duration) {
 		ar.MinSleep -= reduce
 		ar.logDecrease(reduce)
 	}
-}
-
-func (ar *AdaptiveRate) Get(symbol, url string, msg any, maxBytes ...int) error {
-	var err error
-	d := ar.NextSleep
-	for try, status := 1, http.StatusTooManyRequests; (try < 88) && (status == http.StatusTooManyRequests || status == http.StatusTeapot); try++ {
-		if try > 1 {
-			previous := d
-			alpha := int64(maxAlpha * ar.MinSleep / d)
-			d *= time.Duration(try)
-			d += time.Duration(alpha) * ar.MinSleep
-			log.Infof("%s Get %s #%d sleep=%s (+%s) alpha=%d n=%s min=%s",
-				ar.Name, symbol, try, d, d-previous, alpha, ar.NextSleep, ar.MinSleep)
-		}
-		time.Sleep(d)
-		status, err = ar.get(symbol, url, msg, maxBytes...)
-	}
-
-	ar.adjust(d)
-
-	return err
 }
 
 func (ar *AdaptiveRate) get(symbol, url string, msg any, maxBytes ...int) (int, error) {
@@ -239,28 +258,10 @@ func (ar *AdaptiveRate) get(symbol, url string, msg any, maxBytes ...int) (int, 
 		return resp.StatusCode, errors.New("too Many Requests " + symbol)
 	}
 
-	if err = gg.DecodeJSONResponse(resp, msg, maxBytes...); err != nil {
+	err = gg.DecodeJSONResponse(resp, msg, maxBytes...)
+	if err != nil {
 		return resp.StatusCode, fmt.Errorf("decode book %s: %w", symbol, err)
 	}
 
 	return resp.StatusCode, nil
-}
-
-func (ar *AdaptiveRate) LogStats() {
-	log.Infof("%s Adjusted sleep durations: min=%s next=%s",
-		ar.Name, ar.MinSleep, ar.NextSleep)
-}
-
-func (ar *AdaptiveRate) logIncrease(prevMin, prevNext time.Duration) {
-	if printDebug {
-		log.Debugf("%s Increase MinSleep=%s (+%s) next=%s (+%s)",
-			ar.Name, ar.MinSleep, ar.MinSleep-prevMin, ar.NextSleep, ar.NextSleep-prevNext)
-	}
-}
-
-func (ar *AdaptiveRate) logDecrease(reduce time.Duration) {
-	if printDebug {
-		log.Debugf("%s Decrease MinSleep=%s (-%s) next=%s",
-			ar.Name, ar.MinSleep, reduce, ar.NextSleep)
-	}
 }

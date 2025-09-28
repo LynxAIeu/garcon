@@ -14,9 +14,26 @@ import (
 	"strings"
 )
 
-// Notifier interface for sending messages.
-type Notifier interface {
-	Notify(message string) error
+type (
+	// Notifier interface for sending messages.
+	Notifier interface {
+		Notify(message string) error
+	}
+
+	// LogNotifier implements a Notifier interface that logs the received notifications.
+	// LogNotifier can be used as a mocked Notifier or for debugging purpose
+	// or as a fallback when a real Notifier cannot be created for whatever reason.
+	LogNotifier struct{}
+
+	// MattermostNotifier for sending messages to a Mattermost server.
+	MattermostNotifier struct {
+		endpoint string
+	}
+)
+
+// NewMattermostNotifier creates a MattermostNotifier given a Mattermost server endpoint (see mattermost hooks).
+func NewMattermostNotifier(endpoint string) MattermostNotifier {
+	return MattermostNotifier{endpoint}
 }
 
 // NewNotifier selects the Notifier type depending on the parameter pattern.
@@ -42,11 +59,6 @@ func NewNotifier(dataSourceName string) Notifier {
 	return NewMattermostNotifier(dataSourceName)
 }
 
-// LogNotifier implements a Notifier interface that logs the received notifications.
-// LogNotifier can be used as a mocked Notifier or for debugging purpose
-// or as a fallback when a real Notifier cannot be created for whatever reason.
-type LogNotifier struct{}
-
 // NewLogNotifier creates a LogNotifier.
 func NewLogNotifier() LogNotifier {
 	return LogNotifier{}
@@ -56,16 +68,6 @@ func NewLogNotifier() LogNotifier {
 func (n LogNotifier) Notify(msg string) error {
 	log.State("LogNotifier:", sanitize(msg))
 	return nil
-}
-
-// MattermostNotifier for sending messages to a Mattermost server.
-type MattermostNotifier struct {
-	endpoint string
-}
-
-// NewMattermostNotifier creates a MattermostNotifier given a Mattermost server endpoint (see mattermost hooks).
-func NewMattermostNotifier(endpoint string) MattermostNotifier {
-	return MattermostNotifier{endpoint}
 }
 
 // Notify sends a message to a Mattermost server.
@@ -123,7 +125,8 @@ func (n TelegramNotifier) Notify(msg string) error {
 	defer response.Body.Close()
 
 	var resp telegramResponse
-	if err = json.NewDecoder(response.Body).Decode(&resp); err != nil {
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
 		return fmt.Errorf("TelegramNotifier chat_id=%s: %w", n.chatID, err)
 	}
 
@@ -135,21 +138,21 @@ func (n TelegramNotifier) Notify(msg string) error {
 }
 
 type telegramResponse struct {
-	Ok     bool `json:"ok"`
 	Result struct {
-		MessageID int `json:"message_id"`
-		From      struct {
-			ID        int    `json:"id"`
-			IsBot     bool   `json:"is_bot"`
-			FirstName string `json:"first_name"`
-			Username  string `json:"username"`
-		} `json:"from"`
+		Text string `json:"text"`
 		Chat struct {
-			ID    int64  `json:"id"`
 			Title string `json:"title"`
 			Type  string `json:"type"`
+			ID    int64  `json:"id"`
 		} `json:"chat"`
-		Date int    `json:"date"`
-		Text string `json:"text"`
+		From struct {
+			FirstName string `json:"first_name"`
+			Username  string `json:"username"`
+			ID        int    `json:"id"`
+			IsBot     bool   `json:"is_bot"`
+		} `json:"from"`
+		MessageID int `json:"message_id"`
+		Date      int `json:"date"`
 	} `json:"result"`
+	Ok bool `json:"ok"`
 }

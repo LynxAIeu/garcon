@@ -16,9 +16,71 @@ import (
 	"time"
 )
 
-const Inf = "inf"
+const (
+	Inf      = "inf"
+	Infinite = math.MaxInt32 - 1
 
-const Infinite = math.MaxInt32 - 1
+	// Durations in nanoseconds from 1 nanosecond to 1 year.
+
+	MinuteSec = 60           // MinuteSec = number of seconds in one minute.
+	HourSec   = 3600         // HourSec = number of seconds in one hour.
+	DaySec    = 24 * HourSec // DaySec = number of seconds in one day.
+	WeekSec   = 7 * DaySec   // WeekSec = number of seconds in one week.
+	MonthSec  = YearSec / 12 // MonthSec = number of seconds in one month.
+	YearSec   = 31556952     // SecondsInOneYear is the average of the number of seconds in one year.
+
+	MicrosecondNs = 1000                 // Number of nanoseconds in 1 microsecond
+	MillisecondNs = 1000 * MicrosecondNs // Number of nanoseconds in 1 millisecond
+	SecondNs      = 1000 * MillisecondNs // Number of nanoseconds in 1 second
+	MinuteNs      = SecondNs * MinuteSec // Number of nanoseconds in 1 minute
+	HourNs        = SecondNs * HourSec   // Number of nanoseconds in 1 hour
+	DayNs         = SecondNs * DaySec    // Number of nanoseconds in 1 day
+	WeekNs        = SecondNs * WeekSec   // Number of nanoseconds in 1 week
+	MonthNs       = SecondNs * MonthSec  // Number of nanoseconds in 1 month
+	YearNs        = SecondNs * YearSec   // Number of nanoseconds in 1 year
+
+	Nanosecond  = time.Nanosecond   // Nanosecond = one billionth of a second
+	Microsecond = time.Microsecond  // Microsecond = 1000 nanoseconds
+	Millisecond = time.Millisecond  // Millisecond = 1000 microseconds
+	Second      = time.Second       // Second = 1000 milliseconds
+	Minute      = time.Minute       // Minute = 60 seconds (no leap seconds)
+	Hour        = time.Hour         // Hour = 60 minutes
+	Day         = Second * DaySec   // Day = 24 hours (ignoring daylight savings effects)
+	Week        = Second * WeekSec  // Week = 7 days
+	Month       = Second * MonthSec // Month = one twelfth of a year (2629746 seconds, about 30.4 days)
+	Year        = Second * YearSec  // Year = 31556952 seconds (average considering leap years, about 365.24 days)
+
+	y2000ns = (2000 - 1970) * YearNs
+	y2000s  = (2000 - 1970) * YearSec
+	y2100ns = (2100 - 1970) * YearNs
+	y2100s  = (2100 - 1970) * YearSec
+
+	DateOnly = "2006-01-02"
+	TimeOnly = "15:04:05"
+)
+
+var (
+	// ErrMissingTimeAndUnit indicates time parser was expecting at least a time value followed by a time unit.
+	ErrMissingTimeAndUnit = errors.New("time: expecting a value followed by a unit")
+
+	// ErrExpectingInt indicates time parser was expecting one or more successive numbers.
+	ErrExpectingInt = errors.New("time: expecting [0-9]*")
+
+	// ErrNoDigits indicates time parser was expecting at least one number, but none.
+	ErrNoDigits = errors.New("time: no digits (e.g. '.s' or '-.s')")
+
+	// ErrNoUnit indicates time parser was expecting a time unit, but none.
+	ErrNoUnit = errors.New("time: missing unit (ns, us, ms, s, m, h, d, w, mo, y)")
+
+	// ErrUnknownUnit indicates time parser did not recognized the time unit.
+	ErrUnknownUnit = errors.New("time: unknown unit (valid: ns, us, ms, s, m, h, d, w, mo, y)")
+
+	// ErrOverflowTime indicates time parser is computing a time value larger that 63 bits.
+	ErrOverflowTime = errors.New("time: time value overflow 63 bits")
+
+	//nolint:gochecknoglobals // read-only, used only by ParseTime()
+	yearZero = time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+)
 
 func InfTime() time.Time { return time.Time{} }
 
@@ -67,7 +129,7 @@ func DStr(d time.Duration) string {
 
 	if d <= -Day || d >= Day {
 		days := d.Nanoseconds() / DayNs
-		str = fmt.Sprint(days) + "d"
+		str = strconv.FormatInt(days, 10) + "d"
 
 		if d < 0 {
 			d = -d // sign "-" already marked
@@ -122,70 +184,6 @@ func SameMinuteSecond(t1, t2 time.Time) bool {
 	return (m1 == m2) && (s1 == s2)
 }
 
-// Durations in nanoseconds from 1 nanosecond to 1 year.
-const (
-	MinuteSec = 60           // MinuteSec = number of seconds in one minute.
-	HourSec   = 3600         // HourSec = number of seconds in one hour.
-	DaySec    = 24 * HourSec // DaySec = number of seconds in one day.
-	WeekSec   = 7 * DaySec   // WeekSec = number of seconds in one week.
-	MonthSec  = YearSec / 12 // MonthSec = number of seconds in one month.
-	YearSec   = 31556952     // SecondsInOneYear is the average of the number of seconds in one year.
-
-	MicrosecondNs = 1000                 // Number of nanoseconds in 1 microsecond
-	MillisecondNs = 1000 * MicrosecondNs // Number of nanoseconds in 1 millisecond
-	SecondNs      = 1000 * MillisecondNs // Number of nanoseconds in 1 second
-	MinuteNs      = SecondNs * MinuteSec // Number of nanoseconds in 1 minute
-	HourNs        = SecondNs * HourSec   // Number of nanoseconds in 1 hour
-	DayNs         = SecondNs * DaySec    // Number of nanoseconds in 1 day
-	WeekNs        = SecondNs * WeekSec   // Number of nanoseconds in 1 week
-	MonthNs       = SecondNs * MonthSec  // Number of nanoseconds in 1 month
-	YearNs        = SecondNs * YearSec   // Number of nanoseconds in 1 year
-
-	Nanosecond  = time.Nanosecond   // Nanosecond = one billionth of a second
-	Microsecond = time.Microsecond  // Microsecond = 1000 nanoseconds
-	Millisecond = time.Millisecond  // Millisecond = 1000 microseconds
-	Second      = time.Second       // Second = 1000 milliseconds
-	Minute      = time.Minute       // Minute = 60 seconds (no leap seconds)
-	Hour        = time.Hour         // Hour = 60 minutes
-	Day         = Second * DaySec   // Day = 24 hours (ignoring daylight savings effects)
-	Week        = Second * WeekSec  // Week = 7 days
-	Month       = Second * MonthSec // Month = one twelfth of a year (2629746 seconds, about 30.4 days)
-	Year        = Second * YearSec  // Year = 31556952 seconds (average considering leap years, about 365.24 days)
-
-	y2000ns = (2000 - 1970) * YearNs
-	y2000s  = (2000 - 1970) * YearSec
-	y2100ns = (2100 - 1970) * YearNs
-	y2100s  = (2100 - 1970) * YearSec
-)
-
-var (
-	// ErrMissingTimeAndUnit indicates time parser was expecting at least a time value followed by a time unit.
-	ErrMissingTimeAndUnit = errors.New("time: expecting a value followed by a unit")
-
-	// ErrExpectingInt indicates time parser was expecting one or more successive numbers.
-	ErrExpectingInt = errors.New("time: expecting [0-9]*")
-
-	// ErrNoDigits indicates time parser was expecting at least one number, but none.
-	ErrNoDigits = errors.New("time: no digits (e.g. '.s' or '-.s')")
-
-	// ErrNoUnit indicates time parser was expecting a time unit, but none.
-	ErrNoUnit = errors.New("time: missing unit (ns, us, ms, s, m, h, d, w, mo, y)")
-
-	// ErrUnknownUnit indicates time parser did not recognized the time unit.
-	ErrUnknownUnit = errors.New("time: unknown unit (valid: ns, us, ms, s, m, h, d, w, mo, y)")
-
-	// ErrOverflowTime indicates time parser is computing a time value larger that 63 bits.
-	ErrOverflowTime = errors.New("time: time value overflow 63 bits")
-)
-
-const (
-	DateOnly = "2006-01-02"
-	TimeOnly = "15:04:05"
-)
-
-//nolint:gochecknoglobals // read-only, used only by ParseTime()
-var yearZero = time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
-
 // ParseTime converts string to time.Time.
 //
 //nolint:gocyclo,cyclop // cannot split the function
@@ -195,25 +193,30 @@ func ParseTime(str string) (_ time.Time, ok bool) {
 		return InfTime(), true // returned time value has: IsZero() = true
 
 	case len(TimeOnly):
-		if t, err := time.Parse(TimeOnly, str); err == nil {
+		t, err := time.Parse(TimeOnly, str)
+		if err == nil {
 			hms := t.Sub(yearZero)
 			today := time.Now().UTC().Truncate(Day)
 			return today.Add(hms), true
 		}
 
 	case len(DateOnly):
-		if t, err := time.Parse(DateOnly, str); err == nil {
+		t, err := time.Parse(DateOnly, str)
+		if err == nil {
 			return t.UTC(), true
 		}
 
 	case len(DateOnly + "T" + TimeOnly):
-		if t, err := time.Parse(DateOnly+"T"+TimeOnly, str); err == nil {
+		t, err := time.Parse(DateOnly+"T"+TimeOnly, str)
+		if err == nil {
 			return t.UTC(), true
 		}
-		if t, err := time.Parse(DateOnly+"."+TimeOnly, str); err == nil {
+		t, err = time.Parse(DateOnly+"."+TimeOnly, str)
+		if err == nil {
 			return t.UTC(), true
 		}
-		if t, err := time.Parse(DateOnly+"_"+TimeOnly, str); err == nil {
+		t, err = time.Parse(DateOnly+"_"+TimeOnly, str)
+		if err == nil {
 			return t.UTC(), true
 		}
 
@@ -221,7 +224,8 @@ func ParseTime(str string) (_ time.Time, ok bool) {
 		if len(str) <= len(DateOnly+"T"+TimeOnly) {
 			break
 		}
-		if t, err := time.Parse(time.RFC3339, str); err == nil {
+		t, err := time.Parse(time.RFC3339, str)
+		if err == nil {
 			return t, true
 		}
 	}
@@ -232,13 +236,15 @@ func ParseTime(str string) (_ time.Time, ok bool) {
 // ParseTime converts string to time.Time.
 func parseTimeFallback(str string) (_ time.Time, ok bool) {
 	// Supported time units: "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "w", "mo" (month) and "y".
-	if d, err := ParseDuration(str); err == nil {
+	d, err := ParseDuration(str)
+	if err == nil {
 		t := time.Now().UTC().Add(d)
 		return t, true
 	}
 
 	// Consider numeric value as Unix time express either in seconds or nanoseconds since epoch
-	if t, err := strconv.ParseInt(str, 10, 0); err == nil {
+	t, err := strconv.ParseInt(str, 10, 0)
+	if err == nil {
 		if y2000ns < t && t < y2100ns {
 			return time.Unix(0, t), true // t is the number of nanoseconds since epoch
 		}
@@ -381,12 +387,12 @@ func consumeUnit(str string) (i int, nanoseconds int64, _ error) {
 	return i, nanoseconds, nil
 }
 
-func computeNanoseconds(unitNs, value, fraPart int64, scale float64) (nanoseconds int64, _ error) {
+func computeNanoseconds(unitNs, value, fraPart int64, scale float64) (int64, error) {
 	// Convert the integer part in nanoseconds
 	if value > (math.MaxInt64)/unitNs {
 		return 0, ErrOverflowTime
 	}
-	nanoseconds = value * unitNs
+	nanoseconds := value * unitNs
 
 	// No fractional part => stop here
 	if scale == 0 {
@@ -419,36 +425,38 @@ ADD_FRACTIONAL_PART:
 }
 
 // integralPart consumes the leading [0-9]* from str.
-func integralPart(str string) (v int64, i int, _ error) {
-	for i = 0; i < len(str); i++ {
+func integralPart(str string) (int64, int, error) {
+	var v int64
+	n := len(str)
+	for i := range n {
 		c := str[i]
 		if c < '0' || c > '9' {
-			break
+			return v, i, nil
 		}
 		if v > (math.MaxInt64)/10 {
-			return v, i, ErrOverflowTime
+			return 0, 0, ErrOverflowTime
 		}
 		v = v*10 + int64(c) - '0'
 		if v < 0 {
-			return v, i, ErrOverflowTime
+			return 0, 0, ErrOverflowTime
 		}
 	}
-	return v, i, nil
+	return v, n, nil
 }
 
 // fractionalPart consumes the leading [0-9]* from str.
 // It is used only for fractions, so does not return an error on overflow,
 // it just stops accumulating precision.
-//
-//nolint:varnamelen // f means "fractional part"
-func fractionalPart(str string) (f int64, i int, scale float64) {
-	scale = 1
+func fractionalPart(str string) (int64, int, float64) {
+	var f int64
+	scale := 1.0
 	overflow := false
 
-	for i = 0; i < len(str); i++ {
+	n := len(str)
+	for i := range n {
 		digit := str[i]
 		if digit < '0' || digit > '9' {
-			break
+			return f, i, scale
 		}
 		if overflow {
 			continue
@@ -467,7 +475,7 @@ func fractionalPart(str string) (f int64, i int, scale float64) {
 		scale *= 10
 	}
 
-	return f, i, scale
+	return f, n, scale
 }
 
 // Relative computes a relative time.

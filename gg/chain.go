@@ -15,35 +15,32 @@ import (
 	"net/http"
 )
 
-// Middleware is a constructor function returning a http.Handler.
-type Middleware func(http.Handler) http.Handler
+type (
+	// Chain acts as a list of http.Handler middleware.
+	// Chain is effectively immutable:
+	// once created, it will always hold
+	// the same set of middleware in the same order.
+	Chain []Middleware
 
-// RTMiddleware for a piece of RoundTrip middleware.
-// Some middleware uses this out of the box,
-// so in most cases you can just use somepackage.New().
-type RTMiddleware func(http.RoundTripper) http.RoundTripper
+	// RTChain acts as a list of http.RoundTripper middlewares.
+	// RTChain is effectively immutable:
+	// once created, it will always hold
+	// the same set of middleware in the same order.
+	RTChain []RTMiddleware
 
-// RoundTripperFunc is to RoundTripper what HandlerFunc is to Handler.
-// It is a higher-order function that enables chaining of RoundTrippers
-// with the middleware pattern.
-type RoundTripperFunc func(*http.Request) (*http.Response, error)
+	// Middleware is a constructor function returning a http.Handler.
+	Middleware func(http.Handler) http.Handler
 
-// RoundTrip calls the function itself.
-func (f RoundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) {
-	return f(r)
-}
+	// RTMiddleware for a piece of RoundTrip middleware.
+	// Some middleware uses this out of the box,
+	// so in most cases you can just use somepackage.New().
+	RTMiddleware func(http.RoundTripper) http.RoundTripper
 
-// Chain acts as a list of http.Handler middleware.
-// Chain is effectively immutable:
-// once created, it will always hold
-// the same set of middleware in the same order.
-type Chain []Middleware
-
-// RTChain acts as a list of http.RoundTripper middlewares.
-// RTChain is effectively immutable:
-// once created, it will always hold
-// the same set of middleware in the same order.
-type RTChain []RTMiddleware
+	// RoundTripperFunc is to RoundTripper what HandlerFunc is to Handler.
+	// It is a higher-order function that enables chaining of RoundTrippers
+	// with the middleware pattern.
+	RoundTripperFunc func(*http.Request) (*http.Response, error)
+)
 
 // NewChain creates a new chain,
 // memorizing the given list of middleware.
@@ -59,6 +56,11 @@ func NewChain(chain ...Middleware) Chain {
 // middlewares are only called upon a call to Then().
 func NewRTChain(chain ...RTMiddleware) RTChain {
 	return chain
+}
+
+// RoundTrip calls the function itself.
+func (f RoundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) {
+	return f(r)
 }
 
 // Append extends a chain, adding the provided middleware
