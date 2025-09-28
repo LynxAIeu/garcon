@@ -38,8 +38,8 @@ var (
 func main() {
 	defer garcon.ProbeCPU().Stop() // collects the CPU-profile and writes it in the file "cpu.pprof"
 
-	garcon.LogVersion()
-	garcon.SetVersionFlag()
+	vv.LogVersion()
+	vv.SetVersionFlag()
 	// TODO disable --- auth := flag.Bool("auth", false, "Enable OPA authorization specified in file "+opaFile)
 	prod := flag.Bool("prod", false, "Use settings for production")
 	jwt := flag.Bool("jwt", false, "Use JWT in lieu of the Incorruptible token")
@@ -108,7 +108,7 @@ func handler(g *garcon.Garcon, addr string, ck garcon.TokenChecker) http.Handler
 	r.With(ck.Chk).Get("/myapp/js/*", ws.ServeDir("text/javascript; charset=utf-8"))
 	r.With(ck.Chk).Get("/myapp/css/*", ws.ServeDir("text/css; charset=utf-8"))
 	r.With(ck.Chk).Get("/myapp/images/*", ws.ServeImages())
-	r.With(ck.Chk).Get("/myapp/version", garcon.ServeVersion())
+	r.With(ck.Chk).Get("/myapp/version", vv.ServeVersion())
 
 	// Contact-form
 	wf := g.NewContactForm(addr)

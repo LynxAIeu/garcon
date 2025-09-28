@@ -91,7 +91,7 @@ func setMiddlewares(gw gg.Writer) (_ gg.Chain, connState func(net.Conn, http.Con
 
 	middleware = middleware.Append(
 		reqLimiter.MiddlewareRateLimiter,
-		garcon.MiddlewareServerHeader(serverHeader),
+		vv.MiddlewareServerHeader(serverHeader),
 		garcon.MiddlewareCORS(allowedOrigins, nil, nil, *dev),
 	)
 
@@ -147,7 +147,7 @@ func handler(gw gg.Writer, c *gwt.JWTChecker) http.Handler {
 	r.With(c.Chk).Get("/myapp/js/*", ws.ServeDir("text/javascript; charset=utf-8"))
 	r.With(c.Chk).Get("/myapp/css/*", ws.ServeDir("text/css; charset=utf-8"))
 	r.With(c.Chk).Get("/myapp/images/*", ws.ServeImages())
-	r.With(c.Chk).Get("/myapp/version", garcon.ServeVersion())
+	r.With(c.Chk).Get("/myapp/version", vv.ServeVersion())
 
 	// API
 	r.With(c.Vet).Get("/path/not/in/cookie", items)
