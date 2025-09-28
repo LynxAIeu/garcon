@@ -1,11 +1,11 @@
 # List linters:
 # go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest linters --no-config
 #
-# Run last version:
+# Run lastest:
 # go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run --fix
 #
 # Doc:
-# https://golangci-lint.run/docs/configuration/file/
+# https://golangci-lint.run/docs/configuration/file
 
 version: "2"
 
@@ -26,68 +26,249 @@ linters:
 
   disable:
     - arangolint # arangoDB
+    - cyclop
+    - decorder
     - depguard # list of acceptable packages, exclude other packages
     - dogsled # Checks assignments with too many blank identifiers (e.g. x, _, _, _, := f()).
+    - dupl
     - err113 # do not define dynamic errors, use wrapped static errors instead
+    - errcheck
     - forbidigo
+    - funlen
     - ginkgolinter
     - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
     - gomoddirectives # directives 'replace', 'retract' and 'excludes' in go.mod
     - gomodguard # another Go module dependencies blocker, more featured than depguard
+    - gosec
     - ireturn
+    - lll
     - mnd # Magic number
+    - nestif
+    - nilnil
     - nlreturn
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - recvcheck
     - revive
     - staticcheck
     - testpackage
+    - varnamelen
     - wrapcheck
     - wsl
     - wsl_v5
 
   settings:
-    copyloopvar:
-      check-alias: true
+    # https://golangci-lint.run/docs/linters/configuration/#copyloopvar
+    copyloopvar: # detects places where loop variables are copied
+      check-alias: true # Check all assigning the loop variable to another variable
+
+    decorder:
+      # Default: `type`, `const`, `var` and `func`
+      dec-order:
+        - type
+        - const
+        - var
+        - func
+      ignore-underscore-vars: false # Default: false (underscore vars are not ignored)
+      disable-dec-order-check: false # Default: true (order of declarations is not checked at all)
+      disable-init-func-first-check: false # Default: true = `init` func can be anywhere in file (does not have to be declared before all other functions)
+      disable-dec-num-check: false # Default: true = multiple global `type`, `const` and `var` declarations are allowed
+      disable-type-dec-num-check: false # Default: false (type statements are not ignored)
+      disable-const-dec-num-check: false # Default: false (const statements are not ignored)
+      disable-var-dec-num-check: false # Default: false (var statements are not ignored)
+
+    # Checks the order of functions, methods, and constructors.
+    # https://golangci-lint.run/docs/linters/configuration/#funcorder
+    funcorder:
+      # constructors after the structure declaration.
+      constructor: true # Default: true
+      # exported methods of a structure before the non-exported ones.
+      struct-method: true # Default: true
+      # alphabetically sorted
+      alphabetical: false # Default: false
 
     dupl:
-      threshold: 94
+      threshold: 94 # Tokens count to trigger issue. Default: 150
+
+    # Embedded types should be at the top of the field list of a struct, and there must be an empty line separating embedded fields from regular fields
+    embeddedstructfieldcheck:
+      # Checks that sync.Mutex and sync.RWMutex are not used as embedded fields.
+      forbid-mutex: true # Default: false
+
+    # https://golangci-lint.run/docs/linters/configuration/#errcheck
+    # https://github.com/kisielk/errcheck
 
     errcheck:
+      # check errors in type assertions: `a := b.(MyStruct)`
+      check-type-assertions: true
+      # blank identifier: `num, _ := strconv.Atoi(numStr)`.
       check-blank: false
-      check-type-assertions: false
-
+      # disable the errcheck built-in exclude list
+      disable-default-exclusions: false
+      # https://github.com/kisielk/errcheck#excluding-functions
+      exclude-functions:
+        - (*os.File).Close
+        - (*os.File).Write
+        - encoding/json.Marshal
+        - encoding/json.MarshalIndent
+        - fmt.Printf
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+        - io/ioutil.ReadFile
+      # Display function signature instead of selector.
+      verbose: true
+      
     errorlint:
-      asserts: true
-      comparison: true
+      # Check whether fmt.Errorf uses the %w verb for formatting errors.
+      # See the https://github.com/polyfloyd/go-errorlint for caveats.
+      # Default: true
       errorf: true
+      # Permit more than 1 %w verb, valid per Go 1.20 (requires `errorf: true`).
+      # Default: true
+      errorf-multi: true
+      # Check for plain type assertions and type switches.
+      # Default: true
+      asserts: true
+      # Check for plain error comparisons.
+      # Default: true
+      comparison: true
 
+    # enum switch statements
+    # https://golangci-lint.run/docs/linters/configuration/#exhaustive
+    exhaustive:
+      # Program elements to check for exhaustiveness.
+      # Default: [ switch ]
+      check:
+        - switch
+        - map
+      # Presence of "default" case in switch statements satisfies exhaustiveness,
+      # even if all enum members are not listed.
+      # Default: false
+      default-signifies-exhaustive: false
+      # Enum members matching the supplied regex do not have to be listed in
+      # switch statements to satisfy exhaustiveness.
+      # Default: ""
+      ignore-enum-members: ""
+      # Enum types matching the supplied regex do not have to be listed in
+      # switch statements to satisfy exhaustiveness.
+      # Default: ""
+      ignore-enum-types: ""
+      # Consider enums only in package scopes, not in inner scopes.
+      # Default: false
+      package-scope-only: false
+      # Only run exhaustive check on switches with "//exhaustive:enforce" comment.
+      # Default: false
+      explicit-exhaustive-switch: false
+      # Only run exhaustive check on map literals with "//exhaustive:enforce" comment.
+      # Default: false
+      explicit-exhaustive-map: false
+      # Switch statement requires default case even if exhaustive.
+      # Default: false
+      default-case-required: true
+
+    # https://golangci-lint.run/docs/linters/configuration/#exhaustruct
     exhaustruct:
-      include: []
+      # List of regular expressions to match type names that should be processed.
+      # Anonymous structs can be matched by '<anonymous>' alias.
+      #
+      # Each regular expression must match the full type name, including package path.
+      # For example, to match type `net/http.Cookie` regular expression should be `.*/http\.Cookie`,
+      # but not `http\.Cookie`.
+      # Default: []
+      include:
+        - '.+\.Test'
+        - 'example\.com/package\.ExampleStruct[\d]{1,2}'
+      # List of regular expressions to match type names that should be excluded from processing.
+      # Anonymous structs can be matched by '<anonymous>' alias.
+      # Has precedence over `include`.
+      # Each regular expression must match the full type name, including package path.
+      # For example, to match type `net/http.Cookie` regular expression should be `.*/http\.Cookie`,
+      # but not `http\.Cookie`.
+      # Default: []
       exclude:
         - "Perm$"
 
+      # Allows empty structures, effectively excluding them from the check.
+      allow-empty: true
+      # List of regular expressions to match type names that should be allowed to be empty.
+      # Anonymous structs can be matched by '<anonymous>' alias.
+      # Each regular expression must match the full type name, including package path.
+      # For example, to match type `net/http.Cookie` regular expression should be `.*/http\.Cookie`,
+      # but not `http\.Cookie`.
+      # Default: []
+      allow-empty-rx:
+        - '.*/http\.Cookie'
+      # Allows empty structures in return statements
+      allow-empty-returns: true
+      # Allows empty structures in variable declarations.
+      allow-empty-declarations: true
+
+    # https://golangci-lint.run/docs/linters/configuration/#fatcontext
+    fatcontext:
+      # Check for potential fat contexts in struct pointers. May generate false positives.
+      check-struct-pointers: true
+
+    # https://golangci-lint.run/docs/linters/configuration/#forbidigo
     forbidigo:
+      # Forbid the following identifiers (list of regexp).
+      # Default: ["^(fmt\\.Print(|f|ln)|print|println)$"]
       forbid:
         - msg: Use logger instead of fmt.Print
           pattern: ^fmt\.Print.*$
         - msg: Use logger instead of log
           pattern: ^log\..*$
+        # Built-in bootstrapping functions.
+        - pattern: ^print(ln)?$
+        # Forbid spew Dump, whether it is called as function or method.
+        # Depends on analyze-types below.
+        - pattern: ^spew\.(ConfigState\.)?Dump$
+      # Exclude godoc examples from forbidigo checks.
+      exclude-godoc-examples: true # Default: true
+      # Instead of matching the literal source code, use type information to handle import renaming.
+      analyze-types: false # Default: false
 
-    funlen:
-      lines: 100
-      statements: 50
+    gochecksumtype:
+      # Presence of `default` case in switch statements satisfies exhaustiveness, if all members are not listed.
+      # Default: true
+      default-signifies-exhaustive: false
+      # Include shared interfaces in the exhaustiveness check.
+      # Default: false
+      include-shared-interfaces: true
 
-    gocyclo:
-      min-complexity: 10
-
-    cyclop:
-      max-complexity: 10
-
-    gocognit:
-      min-complexity: 18
-
+    # Finds repeated strings that could be replaced by a constant
     goconst:
       min-len: 2
       min-occurrences: 5
+
+    # https://golangci-lint.run/docs/linters/configuration/#funlen
+    funlen:
+      lines: 100
+      statements: 50
+      ignore-comments: true # Default: true
+
+    # cognitive complexity: function only
+    gocognit:
+      min-complexity: 40 # Default: 30 (but we recommend 10-20)
+
+    # cyclomatic complexity: function only
+    gocyclo:
+      min-complexity: 40 # Default: 30 (but we recommend 10-20)
+
+    # cyclomatic complexity: function and package
+    cyclop:
+      # The maximal code complexity to report.
+      # Default: 10
+      max-complexity: 40
+      # The maximal average package complexity.
+      # If it's higher than 0.0 (float) the check is enabled.
+      # Default: 0.0
+      package-average: 7.5
 
     gocritic:
       enabled-tags:
@@ -96,22 +277,41 @@ linters:
         - opinionated
         - performance
         - style
-      disabled-checks:
-        - captLocal
-        - unnamedResult
+      # disabled-checks:
+        # - captLocal
         # - dupImport # https://github.com/go-critic/go-critic/issues/845
         # - ifElseChain
         # - octalLiteral
-        - whyNoLint
-      # - wrapperFunc
-      # - yodaStyleExpr
-      # - singleCaseSwitch # Every time this occurred in the code, there was no other way.
+        # - singleCaseSwitch # Every time this occurred in the code, there was no other way
+        # - unnamedResult
+        # - whyNoLint
+        # - wrapperFunc
+        # - yodaStyleExpr
 
+    # comments end in a period
     godot:
+      # Comments to be checked: `declarations`, `toplevel`, `noinline` or `all`.
       scope: declarations
+      exclude:
+        # Exclude todo and fixme comments.
+        - "^fixme:"
+        - "^todo:"
+      # Check that each sentence ends with a period.
+      # Default: true
+      period: true
+      # Check that each sentence starts with a capital letter.
+      # Default: false
+      capital: true
 
+    # Detects FIXME, TODO, BUG inside comments that might be left in the code accidentally and should be resolved before merging
     godox:
       keywords: ["TODO", "FIXME", "BUG", "HACK"]
+
+    goheader:
+      template: |-
+        Copyright 2021-2025 The contributors of Garcon.
+        This file is part of Garcon, web+API server toolkit under the MIT License.
+        SPDX-License-Identifier: MIT
 
     gosec:
       confidence: medium
@@ -169,22 +369,21 @@ linters:
       range-loops: true
       simple: true
 
-    predeclared:
-      ignore: []
-
     promlinter:
       strict: false
 
     revive:
       enable-all-rules: true
 
-    rowserrcheck:
-      packages:
-        - database/sql
-        - github.com/jackc/pgx/v4
-
+    # https://golangci-lint.run/docs/linters/configuration/#sloglint
     sloglint:
-      context: all
+      context: scope
+
+    # https://golangci-lint.run/docs/linters/configuration/#staticcheck
+    staticcheck:
+      # https://staticcheck.io/docs/options#checks
+      checks: ["all"]
+      http-status-code-whitelist: []
 
     # Align struct tags: `json:"bar" validate:"required" yml:"bar"`
     # https://golangci-lint.run/docs/linters/configuration/#tagalign
@@ -231,57 +430,42 @@ linters:
     unparam:
       check-exported: false
 
+    # https://golangci-lint.run/docs/linters/configuration/#varnamelen
     varnamelen:
-      # The longest distance, in source lines, that is being considered a "small scope".
-      # Variables used in at most this many lines will be ignored.
-      # Default: 5
-      max-distance: 14
-      # The minimum length of a variable's name that is considered "long".
-      # Variable names that are at least this long will be ignored.
-      # Default: 3
-      min-name-length: 2
-      # Check method receivers.
-      # Default: false
-      check-receiver: false
-      # Check named return values.
-      # Default: false
-      check-return: true
-      # Check type parameters.
-      # Default: false
-      check-type-param: true
-      # Ignore "ok" variables that hold the bool return value of a type assertion.
-      # Default: false
-      ignore-type-assert-ok: false
-      # Ignore "ok" variables that hold the bool return value of a map index.
-      # Default: false
-      ignore-map-index-ok: false
-      # Ignore "ok" variables that hold the bool return value of a channel receive.
-      # Default: false
-      ignore-chan-recv-ok: false
-      # Optional list of variable names that should be ignored completely.
-      # Default: []
-      ignore-names:
-        - err
-        - r # request
-        - w # writer
-        - g # garcon
-        - u # url
-        - d # duration
-      # Optional list of variable declarations that should be ignored completely.
-      # Entries must be in one of the following forms (see below for examples):
-      # - for variables, parameters, named return values, method receivers, or type parameters:
-      #   <name> <type>  (<type> can also be a pointer/slice/map/chan/...)
-      # - for constants: const <name>
-      #
-      # Default: []
-      ignore-decls:
-        - t testing.T
-        - f *foo.Bar
+      max-distance: 6 # Ignore variables in "small scope" of this number of lines (max), Default: 5
+      min-name-length: 3 # Ignore variables having this minimum name length, Default: 3
+      check-receiver: false # Check method receivers, Default: false
+      check-return: false # Check named return values, Default: false
+      check-type-param: true # Check type parameters, Default: false
+      ignore-type-assert-ok: true # Ignore "ok" variables that hold the bool return value of a type assertion, Default: false
+      ignore-map-index-ok: true # Ignore "ok" variables that hold the bool return value of a map index, Default: false
+      ignore-chan-recv-ok: true # Ignore "ok" variables that hold the bool return value of a channel receive, Default: false
+      ignore-names: # Ignore these variable names.
+        - c
+        - v
+        - p1
+        - p2
+        - w
+        - ck
+        - kv
+      ignore-decls: # Ignore these variable declarations.
         - e error
+        - er  error # avoid shadowing err
+        - err error
         - i int
-        - const C
-        - T any
+        - n int
+        - k string
         - m map[string]int
+        - T any
+        - t testing.T
+        - v string
+        - t time.Time
+        - v int64
+        - d time.Duration
+        - ok bool
+        - u *url.URL
+        - md string
+        - t *template.Template
 
     whitespace:
       multi-if: true
@@ -306,4 +490,6 @@ run:
   # from this option's value:
   #     vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
   go: "1.25"
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
+
