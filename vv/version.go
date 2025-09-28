@@ -1,9 +1,8 @@
-// Copyright 2021 Teal.Finance/Garcon contributors
-// This file is part of Teal.Finance/Garcon,
-// an API and website server under the MIT License.
+// Copyright 2021-2025 The contributors of Garcon.
+// This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
-package garcon
+package vv
 
 import (
 	"flag"
@@ -17,28 +16,33 @@ import (
 	"github.com/carlmjohnson/flagx"
 	"github.com/carlmjohnson/versioninfo"
 
-	"github.com/teal-finance/garcon/gg"
-	"github.com/teal-finance/garcon/timex"
+	"github.com/LM4eu/garcon/timex"
+
+	"github.com/LM4eu/emo"
 )
 
-// V is set at build time using the `-ldflags` build flag:
-//
-//	v="$(git describe --tags --always --broken)"
-//	go build -ldflags="-X 'github.com/teal-finance/garcon.V=$v'" ./cmd/main/package
-//
-// The following commands provide a semver-like version format such as
-// "v1.2.0-my-branch+3" where "+3" is the number of commits since "v1.2.0".
-// If no tag in the Git repo, $t is the long SHA1 of the last commit.
-//
-//	t="$(git describe --tags --abbrev=0 --always)"
-//	b="$(git branch --show-current)"
-//	[ _$b = _main ] && b="" || b="-$b"
-//	n="$(git rev-list --count "$t"..)"
-//	[ "$n" -eq 0 ] && n="" || n="+$n"
-//	go build -ldflags="-X 'github.com/teal-finance/garcon.V=$t$b$n'" ./cmd/main/package
-//
-//nolint:gochecknoglobals,varnamelen // set at build time: should be global and short.
-var V string
+var (
+	log = emo.NewZone("version")
+
+	// V is set at build time using the `-ldflags` build flag:
+	//
+	//	v="$(git describe --tags --always --broken)"
+	//	go build -ldflags="-X 'github.com/LM4eu/garcon.V=$v'" ./cmd/main/package
+	//
+	// The following commands provide a semver-like version format such as
+	// "v1.2.0-my-branch+3" where "+3" is the number of commits since "v1.2.0".
+	// If no tag in the Git repo, $t is the long SHA1 of the last commit.
+	//
+	//	t="$(git describe --tags --abbrev=0 --always)"
+	//	b="$(git branch --show-current)"
+	//	[ _$b = _main ] && b="" || b="-$b"
+	//	n="$(git rev-list --count "$t"..)"
+	//	[ "$n" -eq 0 ] && n="" || n="+$n"
+	//	go build -ldflags="-X 'github.com/LM4eu/garcon.V=$t$b$n'" ./cmd/main/package
+	//
+	//nolint:gochecknoglobals,varnamelen // set at build time: should be global and short.
+	V string
+)
 
 // Version format is "Program-1.2.3".
 // If the program argument is empty, the format is "v1.2.3".
@@ -74,7 +78,7 @@ func SetVersionFlag() {
 //
 // Example with default values:
 //
-//	import "github.com/teal-finance/garcon"
+//	import "github.com/LM4eu/garcon"
 //
 //	func main() {
 //	     garcon.SetCustomVersionFlag(nil, "", "")
@@ -83,7 +87,7 @@ func SetVersionFlag() {
 //
 // Example with custom values values:
 //
-//	import "github.com/teal-finance/garcon"
+//	import "github.com/LM4eu/garcon"
 //
 //	func main() {
 //	     garcon.SetCustomVersionFlag(nil, "v", "MyApp")
@@ -179,7 +183,9 @@ func initVersionInfo() versionInfo {
 	return vi
 }
 
-const html = `<!DOCTYPE html>
+// ServeVersion send HTML or JSON depending on Accept header.
+func ServeVersion() func(w http.ResponseWriter, r *http.Request) {
+	const html = `<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="UTF-8">
@@ -190,8 +196,6 @@ const html = `<!DOCTYPE html>
 </body>
 </html>`
 
-// ServeVersion send HTML or JSON depending on Accept header.
-func ServeVersion() func(w http.ResponseWriter, r *http.Request) {
 	t, err := template.New("version").Parse(html)
 	if err != nil {
 		log.Panic("ServeVersion template.New:", err)
@@ -225,21 +229,11 @@ func writeHTML(w http.ResponseWriter, t *template.Template) {
 	noProgramName := ""
 	lines := versionStrings(noProgramName)
 	data := struct{ Items []string }{lines}
-	if err := t.Execute(w, data); err != nil {
+	err := t.Execute(w, data)
+	if err != nil {
 		log.Warn("writeHTML Execute:", err)
 		w.WriteHeader(http.StatusNoContent)
 	}
-}
-
-func (g *Garcon) MiddlewareServerHeader(serverName ...string) gg.Middleware {
-	name := g.ServerName.String()
-	if len(serverName) > 0 && serverName[0] != "" {
-		name = serverName[0]
-	}
-
-	version := Version(name)
-
-	return MiddlewareServerHeader(version)
 }
 
 // MiddlewareServerHeader is the middleware setting the Server HTTP header in the response.
