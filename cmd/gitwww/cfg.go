@@ -28,12 +28,12 @@ type Cfg struct {
 }
 
 const (
-	defaultCfgDir  = "/var/opt/garcon/"
-	defaultCfgName = "garcon.ini"
+	defaultCfgDir  = "/var/opt/gitwww/"
+	defaultCfgName = "gitwww.ini"
 	defaultCfgPath = defaultCfgDir + defaultCfgName
 
-	GARCON_CFG = "GARCON_CFG"
-	GARCON_LOG = "GARCON_LOG"
+	GITWWW_CFG = "GITWWW_CFG"
+	GITWWW_LOG = "GITWWW_LOG"
 )
 
 func (cfg *Cfg) clone() *Cfg {
@@ -42,9 +42,9 @@ func (cfg *Cfg) clone() *Cfg {
 }
 
 func getCfg() (*Cfg, error) {
-	path := flag.String("c", defaultCfgPath, "Configuration (file or directory), take precedence on "+GARCON_CFG)
-	debug := flag.Bool("d", false, "debug mode, same as "+GARCON_LOG+"=DEBUG")
-	quiet := flag.Bool("q", false, "quiet mode, same as "+GARCON_LOG+"=WARN")
+	path := flag.String("c", defaultCfgPath, "Configuration (file or directory), take precedence on "+GITWWW_CFG)
+	debug := flag.Bool("d", false, "debug mode, same as "+GITWWW_LOG+"=DEBUG")
+	quiet := flag.Bool("q", false, "quiet mode, same as "+GITWWW_LOG+"=WARN")
 	write := flag.Bool("w", false, "write the configuration file")
 	absolute := flag.Bool("ww", false, "overwrite an explicit version of the configuration file using absolute paths")
 	simplify := flag.Bool("www", false, "overwrite a simplified version of the configuration file")
@@ -59,7 +59,7 @@ func getCfg() (*Cfg, error) {
 	}
 
 	if *path == defaultCfgPath {
-		*path = os.Getenv(GARCON_CFG)
+		*path = os.Getenv(GITWWW_CFG)
 	}
 	if *path == "" {
 		*path = defaultCfgPath
@@ -213,7 +213,7 @@ func (cfg *Cfg) getLevel(debug, quiet bool) slog.Level {
 		return slog.LevelWarn
 	}
 
-	txt, found := syscall.Getenv(GARCON_LOG)
+	txt, found := syscall.Getenv(GITWWW_LOG)
 	if !found {
 		txt = cfg.LogLevel
 	}
