@@ -8,13 +8,11 @@ import (
 	"flag"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-
-	"github.com/LynxAIeu/garcon"
-
+	"github.com/LynxAIeu/garcon/gc"
 	"github.com/LynxAIeu/garcon/gg"
 
 	"github.com/LynxAIeu/emo"
+	"github.com/go-chi/chi/v5"
 )
 
 var (
@@ -27,7 +25,7 @@ func main() {
 	endpoint := flag.String("post-endpoint", "/", "The endpoint for the POST request.")
 	flag.Parse()
 
-	g := garcon.New(garcon.WithServerName("ChiExample"))
+	g := gc.New(gc.WithServerName("ChiExample"))
 
 	middleware := gg.NewChain(
 		g.MiddlewareLogRequest("safe"),

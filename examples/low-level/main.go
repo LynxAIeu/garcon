@@ -11,16 +11,14 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/LynxAIeu/emo"
 
-	"github.com/LynxAIeu/garcon"
-
+	"github.com/LynxAIeu/garcon/gc"
 	"github.com/LynxAIeu/garcon/gg"
 	"github.com/LynxAIeu/garcon/gwt"
-
 	"github.com/LynxAIeu/garcon/vv"
 
-	"github.com/LynxAIeu/emo"
+	"github.com/go-chi/chi/v5"
 )
 
 // Garcon settings.
@@ -45,9 +43,9 @@ var (
 
 func main() {
 	// the following line collects the CPU-profile and writes it in the file "cpu.pprof"
-	defer garcon.ProbeCPU().Stop()
+	defer gc.ProbeCPU().Stop()
 
-	garcon.StartPProfServer(pprofPort)
+	gc.StartPProfServer(pprofPort)
 
 	// Uniformize error responses with API doc
 	gw := gg.NewWriter(apiDoc)
@@ -70,16 +68,16 @@ func setMiddlewares(gw gg.Writer) (_ gg.Chain, connState func(net.Conn, http.Con
 
 	// Start an exporter/health server in background if export port > 0.
 	// This server is for use with Kubernetes and Prometheus-like monitoring tools.
-	middleware, connState := garcon.StartExporter(expPort, "LowLevel",
-		garcon.WithLivenessProbes(func() []byte { return nil }),
-		garcon.WithLivenessProbes(func() []byte { return nil }),
-		garcon.WithLivenessProbes(func() []byte { return nil }),
-		garcon.WithReadinessProbes(func() []byte { return nil }),
-		garcon.WithReadinessProbes(func() []byte { return []byte("fail") }),
+	middleware, connState := gc.StartExporter(expPort, "LowLevel",
+		gc.WithLivenessProbes(func() []byte { return nil }),
+		gc.WithLivenessProbes(func() []byte { return nil }),
+		gc.WithLivenessProbes(func() []byte { return nil }),
+		gc.WithReadinessProbes(func() []byte { return nil }),
+		gc.WithReadinessProbes(func() []byte { return []byte("fail") }),
 	)
 
 	// Limit the input request rate per IP
-	reqLimiter := garcon.NewRateLimiter(gw, burst, reqMinute, *dev)
+	reqLimiter := gc.NewRateLimiter(gw, burst, reqMinute, *dev)
 
 	allowedStr := allowedProdOrigin
 	if *dev {
@@ -92,13 +90,13 @@ func setMiddlewares(gw gg.Writer) (_ gg.Chain, connState func(net.Conn, http.Con
 	middleware = middleware.Append(
 		reqLimiter.MiddlewareRateLimiter,
 		vv.MiddlewareServerHeader(serverHeader),
-		garcon.MiddlewareCORS(allowedOrigins, nil, nil, *dev),
+		gc.MiddlewareCORS(allowedOrigins, nil, nil, *dev),
 	)
 
 	// authCfg is deprecated - // Endpoint authentication rules (Open Policy Agent)
 	// authCfg is deprecated - if *auth {
-	// authCfg is deprecated - 	files := garcon.SplitClean(authCfg)
-	// authCfg is deprecated - 	policy, err := garcon.NewPolicy(gw, files)
+	// authCfg is deprecated - 	files := gc.SplitClean(authCfg)
+	// authCfg is deprecated - 	policy, err := gc.NewPolicy(gw, files)
 	// authCfg is deprecated - 	if err != nil {
 	// authCfg is deprecated - 		log.Fatal(err)
 	// authCfg is deprecated - 	}
@@ -140,7 +138,7 @@ func handler(gw gg.Writer, c *gwt.JWTChecker) http.Handler {
 	r := chi.NewRouter()
 
 	// Static website files
-	ws := garcon.StaticWebServer{Dir: "examples/www", Writer: gw}
+	ws := gc.StaticWebServer{Dir: "examples/www", Writer: gw}
 	r.Get("/favicon.ico", ws.ServeFile("favicon.ico", "image/x-icon"))
 	r.With(c.Set).Get("/myapp", ws.ServeFile("myapp/index.html", "text/html; charset=utf-8"))
 	r.With(c.Set).Get("/myapp/", ws.ServeFile("myapp/index.html", "text/html; charset=utf-8"))

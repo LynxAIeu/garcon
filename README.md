@@ -24,8 +24,8 @@ Our Middleware are very easy to setup. They respect the Go standards. Thus you c
 - `MiddlewareSecureHTTPHeader` Set some HTTP header to increase the web security
 
 ```go
-g := garcon.New()
-middleware = garcon.NewChain(
+g := gc.New()
+middleware = gc.NewChain(
     g.MiddlewareRejectUnprintableURI(),
     g.MiddlewareLogRequest(),
     g.MiddlewareRateLimiter())
@@ -49,10 +49,10 @@ server.ListenAndServe()
 ## Basic example
 
 ```go
-g := garcon.New()
+g := gc.New()
 
 // chain some middleware
-middleware = garcon.NewChain(
+middleware = gc.NewChain(
     g.MiddlewareRejectUnprintableURI(),
     g.MiddlewareLogRequests(),
     g.MiddlewareRateLimiter())
@@ -92,12 +92,12 @@ to create/verify session cookie.
 ```go
 package main
 
-import "github.com/LynxAIeu/garcon"
+import "github.com/LynxAIeu/garcon/gc"
 
 func main() {
-    g, _ := garcon.New(
-        garcon.WithURLs("https://my-company.com"),
-        garcon.WithDev())
+    g, _ := gc.New(
+        gc.WithURLs("https://my-company.com"),
+        gc.WithDev())
 
     aes128Key = "00112233445566778899aabbccddeeff"
     maxAge := 3600
@@ -132,12 +132,12 @@ The JWT and Incorruptible checkers share a common interface,
 ```go
 package main
 
-import "github.com/LynxAIeu/garcon"
+import "github.com/LynxAIeu/garcon/gc"
 
 func main() {
-    g, _ := garcon.New(
-        garcon.WithURLs("https://my-company.com"),
-        garcon.WithDev())
+    g, _ := gc.New(
+        gc.WithURLs("https://my-company.com"),
+        gc.WithDev())
 
     hmacSHA256Key := "9d2e0a02121179a3c3de1b035ae1355b1548781c8ce8538a1dc0853a12dfb13d"
     ck := g.JWTChecker(hmacSHA256Key, "FreePlan", 10, "PremiumPlan", 100)
@@ -179,13 +179,13 @@ See a complete real example in the repo
 Moreover, Garcon simplifies investigation on CPU and memory consumption issues
 thanks to <https://github.com/pkg/profile>.
 
-In your code, add `defer garcon.ProbeCPU.Stop()` that will write the `cpu.pprof` file.
+In your code, add `defer gc.ProbeCPU.Stop()` that will write the `cpu.pprof` file.
 
 ```go
-import "github.com/LynxAIeu/garcon"
+import "github.com/LynxAIeu/garcon/gc"
 
 func myFunctionConsumingLotsOfCPU() {
-    defer garcon.ProbeCPU.Stop()
+    defer gc.ProbeCPU.Stop()
 
     // ... lots of sub-functions
 }
@@ -209,17 +209,17 @@ package main
 import "github.com/LynxAIeu/garcon/vv"
 
 func main() {
-    defer garcon.ProbeCPU().Stop() // collects the CPU-profile and writes it in the file "cpu.pprof"
+    defer gc.ProbeCPU().Stop() // collects the CPU-profile and writes it in the file "cpu.pprof"
 
     vv.LogVersion()     // log the Git version
     vv.SetVersionFlag() // the -version flag prints the Git version
     jwt := flag.Bool("jwt", false, "Use JWT in lieu of the Incorruptible token")
     flag.Parse()
 
-    g := garcon.New(
-        garcon.WithURLs("https://my-company.co"),
-        garcon.WithDocURL("/doc"),
-        garcon.WithPProf(8093))
+    g := gc.New(
+        gc.WithURLs("https://my-company.co"),
+        gc.WithDocURL("/doc"),
+        gc.WithPProf(8093))
 
     ic := g.IncorruptibleChecker(aes128Key, 60, true)
     jc := g.JWTChecker(hmacSHA256Key, "FreePlan", 10, "PremiumPlan", 100)
@@ -249,8 +249,8 @@ func main() {
     router.With(jc.Vet).Post("/api/items", myFunctionHandler)
 
     handler := middleware.Then(router)
-    server := garcon.Server(handler, 8080, connState)
-    garcon.ListenAndServe(&server)
+    server := gc.Server(handler, 8080, connState)
+    gc.ListenAndServe(&server)
 }
 ```
 
@@ -371,11 +371,11 @@ The resources and API endpoints are protected with a HttpOnly cookie.
 The [complete example](examples/complete/main.go) sets the cookie to browsers visiting the `index.html`.
 
 ```go
-func handler(gw garcon.Writer, jc *jwtperm.Checker) http.Handler {
+func handler(gw gc.Writer, jc *jwtperm.Checker) http.Handler {
     r := chi.NewRouter()
 
     // Static website files
-    ws := garcon.WebServer{Dir: "examples/www", Writer: gw}
+    ws := gc.WebServer{Dir: "examples/www", Writer: gw}
     r.With(jc.SetCookie).Get("/", ws.ServeFile("index.html", "text/html; charset=utf-8"))
     r.With(jc.SetCookie).Get("/favicon.ico", ws.ServeFile("favicon.ico", "image/x-icon"))
     r.With(jc.ChkCookie).Get("/js/*", ws.ServeDir("text/javascript; charset=utf-8"))
@@ -512,7 +512,7 @@ import (
     "time"
 
     "github.com/go-chi/chi/v5"
-    "github.com/LynxAIeu/garcon"
+    "github.com/LynxAIeu/garcon/gc"
 )
 
 // Garcon settings
@@ -529,13 +529,13 @@ const devMode = true
 func main() {
     if devMode {
         // the following line collects the CPU-profile and writes it in the file "cpu.pprof"
-        defer garcon.ProbeCPU().Stop()
+        defer gc.ProbeCPU().Stop()
     }
 
-    garcon.StartPProfServer(pprofPort)
+    gc.StartPProfServer(pprofPort)
 
     // Uniformize error responses with API doc
-    gw := garcon.NewWriter(apiDoc)
+    gw := gc.NewWriter(apiDoc)
 
     middleware, connState := setMiddlewares(gw)
 
@@ -546,30 +546,30 @@ func main() {
     runServer(h, connState)
 }
 
-func setMiddlewares(gw garcon.Writer) (middleware garcon.Chain, connState func(net.Conn, http.ConnState)) {
+func setMiddlewares(gw gc.Writer) (middleware gc.Chain, connState func(net.Conn, http.ConnState)) {
  // Start an exporter/health server in background if export port > 0.
  // This server is for use with Kubernetes and Prometheus-like monitoring tools.
-    middleware, connState = garcon.StartExporter(expPort, devMode)
+    middleware, connState = gc.StartExporter(expPort, devMode)
 
     // Limit the input request rate per IP
-    reqLimiter := garcon.NewReqLimiter(gw, burst, reqMinute, devMode)
+    reqLimiter := gc.NewReqLimiter(gw, burst, reqMinute, devMode)
 
     corsConfig := allowedProdOrigin
     if devMode {
         corsConfig += " " + allowedDevOrigins
     }
 
-    allowedOrigins := garcon.SplitClean(corsConfig)
+    allowedOrigins := gc.SplitClean(corsConfig)
 
     middleware = middleware.Append(
         reqLimiter.Limit,
-        garcon.ServerHeader(serverHeader),
+        gc.ServerHeader(serverHeader),
         cors.Handler(allowedOrigins, devMode),
     )
 
     // Endpoint authentication rules (Open Policy Agent)
-    files := garcon.SplitClean(authCfg)
-    policy, err := garcon.NewPolicy(gw, files)
+    files := gc.SplitClean(authCfg)
+    policy, err := gc.NewPolicy(gw, files)
     if err != nil {
         log.Fatal(err)
     }
@@ -607,7 +607,7 @@ func runServer(h http.Handler, connState func(net.Conn, http.ConnState)) {
 }
 
 // handler creates the mapping between the endpoints and the handler functions.
-func handler(gw garcon.Writer) http.Handler {
+func handler(gw gc.Writer) http.Handler {
     r := chi.NewRouter()
 
     // Website with static files

@@ -66,7 +66,7 @@ func (f RoundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) {
 // Append extends a chain, adding the provided middleware
 // as the last ones in the request flow.
 //
-//	chain := garcon.NewChain(m1, m2)
+//	chain := gc.NewChain(m1, m2)
 //	chain = chain.Append(m3, m4)
 //	// requests in chain go m1 -> m2 -> m3 -> m4
 func (c Chain) Append(chain ...Middleware) Chain {
@@ -80,15 +80,15 @@ func (c Chain) Append(chain ...Middleware) Chain {
 //
 // Example #1
 //
-//	stdChain := garcon.NewRTChain(m1, m2)
+//	stdChain := gc.NewRTChain(m1, m2)
 //	extChain := stdChain.Append(m3, m4)
 //	// requests in stdChain go m1 -> m2
 //	// requests in extChain go m1 -> m2 -> m3 -> m4
 //
 // Example #2
 //
-//	stdChain := garcon.NewRTChain(m1, m2)
-//	ext1Chain := garcon.NewRTChain(m3, m4)
+//	stdChain := gc.NewRTChain(m1, m2)
+//	ext1Chain := gc.NewRTChain(m3, m4)
 //	ext2Chain := stdChain.Append(ext1Chain...)
 //	// requests in stdChain go  m1 -> m2
 //	// requests in ext1Chain go m3 -> m4
@@ -96,8 +96,8 @@ func (c Chain) Append(chain ...Middleware) Chain {
 //
 // Example #3
 //
-//	aHtmlAfterNosurf := garcon.NewRTChain(m2)
-//	aHtml := garcon.NewRTChain(m1, func(rt http.RoundTripper) http.RoundTripper {
+//	aHtmlAfterNosurf := gc.NewRTChain(m2)
+//	aHtml := gc.NewRTChain(m1, func(rt http.RoundTripper) http.RoundTripper {
 //		csrf := nosurf.New(rt)
 //		csrf.SetFailureHandler(aHtmlAfterNosurf.ThenFunc(csrfFail))
 //		return csrf
@@ -110,7 +110,7 @@ func (c RTChain) Append(chain ...RTMiddleware) RTChain {
 
 // Then chains the middlewares and returns the final http.Handler.
 //
-//	garcon.NewChain(m1, m2, m3).Then(h)
+//	gc.Chain(m1, m2, m3).Then(h)
 //
 // is equivalent to:
 //
@@ -122,7 +122,7 @@ func (c RTChain) Append(chain ...RTMiddleware) RTChain {
 //
 // A chain can be safely reused by calling Then() several times.
 //
-//	chain := garcon.NewChain(rateLimitHandler, csrfHandler)
+//	chain := gc.Chain(rateLimitHandler, csrfHandler)
 //	indexPipe = chain.Then(indexHandler)
 //	authPipe  = chain.Then(authHandler)
 //
@@ -149,7 +149,7 @@ func (c Chain) Then(handler http.Handler) http.Handler {
 
 // Then chains the middleware and returns the final http.RoundTripper.
 //
-//	garcon.NewRTChain(m1, m2, m3).Then(rt)
+//	gc.NewRTChain(m1, m2, m3).Then(rt)
 //
 // is equivalent to:
 //
@@ -161,7 +161,7 @@ func (c Chain) Then(handler http.Handler) http.Handler {
 //
 // A chain can be safely reused by calling Then() several times.
 //
-//	stdStack := garcon.NewRTChain(rateLimitHandler, csrfHandler)
+//	stdStack := gc.NewRTChain(rateLimitHandler, csrfHandler)
 //	indexPipe = stdStack.Then(indexHandler)
 //	authPipe = stdStack.Then(authHandler)
 //

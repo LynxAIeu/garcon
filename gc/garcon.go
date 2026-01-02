@@ -2,10 +2,10 @@
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
-// Package garcon is a server for API and static website
+// Package gc is a server for API and static website
 // including middlewares to manage rate-limit, Cookies, JWT,
 // CORS, OPA, web traffic, Prometheus export and PProf.
-package garcon
+package gc
 
 import (
 	"encoding/hex"
@@ -18,7 +18,6 @@ import (
 
 	"github.com/LynxAIeu/garcon/gg"
 	"github.com/LynxAIeu/garcon/gwt"
-
 	"github.com/LynxAIeu/garcon/vv"
 
 	"github.com/LynxAIeu/emo"
@@ -92,7 +91,7 @@ func WithDocURL(docURL string) Option {
 
 func WithDev(enable ...bool) Option {
 	if len(enable) >= 2 {
-		log.Panic("garcon.WithDev() must be called with zero or one argument")
+		log.Panic("gc.WithDev() must be called with zero or one argument")
 	}
 
 	devMode := true
@@ -211,7 +210,7 @@ func (g *Garcon) IncorruptibleCheckerBin(secretKeyBin []byte, maxAge int, setIP 
 	}
 
 	if len(g.urls) == 0 {
-		log.Panic("Missing URLs => Set first the URLs with garcon.WithURLs()")
+		log.Panic("Missing URLs => Set first the URLs with gc.WithURLs()")
 	}
 
 	cookieName := string(g.ServerName)
@@ -225,7 +224,7 @@ func (g *Garcon) IncorruptibleCheckerBin(secretKeyBin []byte, maxAge int, setIP 
 // is the key encoded in either hexadecimal or unpadded Base64 as defined in RFC 4648 §5 (URL encoding).
 func (g *Garcon) JWTChecker(keyTxt string, planPerm ...any) *gwt.JWTChecker {
 	if len(g.urls) == 0 {
-		log.Panic("Missing URLs => Set first the URLs with garcon.WithURLs()")
+		log.Panic("Missing URLs => Set first the URLs with gc.WithURLs()")
 	}
 
 	return gwt.NewJWTChecker(g.Writer, g.urls, keyTxt, g.ServerName.String(), planPerm...)

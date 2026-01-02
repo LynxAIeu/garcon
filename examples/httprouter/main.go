@@ -8,13 +8,11 @@ import (
 	"flag"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
-
-	"github.com/LynxAIeu/garcon"
-
+	"github.com/LynxAIeu/garcon/gc"
 	"github.com/LynxAIeu/garcon/gg"
 
 	"github.com/LynxAIeu/emo"
+	"github.com/julienschmidt/httprouter"
 )
 
 type others struct{}
@@ -30,7 +28,7 @@ func main() {
 	endpoint := flag.String("post-endpoint", "/", "The endpoint for the POST request.")
 	flag.Parse()
 
-	g := garcon.New(garcon.WithServerName("HttpRouterExample"))
+	g := gc.New(gc.WithServerName("HttpRouterExample"))
 
 	middleware := gg.NewChain(
 		g.MiddlewareLogRequest("safe"),

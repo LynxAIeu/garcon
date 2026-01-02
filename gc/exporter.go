@@ -2,7 +2,7 @@
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
-package garcon
+package gc
 
 import (
 	"net"
@@ -13,6 +13,7 @@ import (
 	"unicode"
 
 	"github.com/LynxAIeu/garcon/gg"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promauto"

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 //nolint:testpackage // test unexported function
-package garcon
+package gc
 
 import (
 	"testing"

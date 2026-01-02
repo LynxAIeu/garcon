@@ -2,7 +2,7 @@
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
-package garcon
+package gc
 
 import (
 	"time"

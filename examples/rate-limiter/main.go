@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/LynxAIeu/garcon"
+	"github.com/LynxAIeu/garcon/gc"
 
 	"github.com/LynxAIeu/emo"
 )
@@ -56,7 +56,7 @@ const (
 var log = emo.NewZone("app")
 
 func main() {
-	ar := garcon.NewAdaptiveRate("Deribit", adaptiveMinSleepTime)
+	ar := gc.NewAdaptiveRate("Deribit", adaptiveMinSleepTime)
 	count := 0
 	for range 1000 {
 		instruments, err := query(ar, "BTC")
@@ -78,7 +78,7 @@ func main() {
 	fmt.Printf("fetched %d instruments from Deribit \n", count)
 }
 
-func query(ar garcon.AdaptiveRate, coin string) (int, error) {
+func query(ar gc.AdaptiveRate, coin string) (int, error) {
 	const api = "https://deribit.com/api/v2/public/get_instruments?currency="
 	const opts = "&expired=false&kind=option"
 	url := api + coin + opts

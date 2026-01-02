@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	turbo64 "github.com/cristalhq/base64"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/LynxAIeu/garcon/gg"
 )
@@ -308,7 +309,8 @@ func AccessClaimsFromBase64(payload []byte, reuse bool) (*AccessClaims, error) {
 		return nil, &claimError{err, payload}
 	}
 
-	err = claims.Valid() // error can be: expired or invalid access token
+	validator := jwt.NewValidator()
+	err = validator.Validate(claims) // error can be: expired or invalid access token
 	return &claims, err
 }
 

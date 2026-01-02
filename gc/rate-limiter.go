@@ -2,7 +2,7 @@
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
-package garcon
+package gc
 
 import (
 	"errors"
@@ -55,7 +55,7 @@ func (g *Garcon) MiddlewareRateLimiter(settings ...int) gg.Middleware {
 		maxReqBurst = settings[0]
 		maxReqPerMinute = settings[1]
 	default:
-		log.Panic("garcon.MiddlewareRateLimiter() accepts up to two arguments, got", len(settings))
+		log.Panic("gc.MiddlewareRateLimiter() accepts up to two arguments, got", len(settings))
 	}
 
 	reqLimiter := NewRateLimiter(g.Writer, maxReqBurst, maxReqPerMinute, g.devMode)

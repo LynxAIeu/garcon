@@ -20,7 +20,7 @@ import (
 	"hash"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/LynxAIeu/garcon/gg"
 	"github.com/LynxAIeu/garcon/timex"
@@ -367,11 +367,7 @@ func ValidAccessToken(accessToken, algo string, verificationKeyDER []byte) error
 
 	var claims AccessClaims
 	f := func(*jwt.Token) (any, error) { return verificationKey, nil }
-	validator := jwt.NewParser(jwt.WithValidMethods([]string{algo}))
-	token, err := validator.ParseWithClaims(accessToken, &claims, f)
-	if err != nil {
-		return err
-	}
-
-	return token.Claims.Valid()
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{algo}))
+	_, err = parser.ParseWithClaims(accessToken, &claims, f)
+	return err
 }

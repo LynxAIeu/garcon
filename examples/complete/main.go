@@ -9,15 +9,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi/v5"
-
-	"github.com/LynxAIeu/garcon"
-
+	"github.com/LynxAIeu/garcon/gc"
 	"github.com/LynxAIeu/garcon/gg"
-
 	"github.com/LynxAIeu/garcon/vv"
 
 	"github.com/LynxAIeu/emo"
+	"github.com/go-chi/chi/v5"
 )
 
 // Garcon settings.
@@ -36,7 +33,7 @@ var (
 )
 
 func main() {
-	defer garcon.ProbeCPU().Stop() // collects the CPU-profile and writes it in the file "cpu.pprof"
+	defer gc.ProbeCPU().Stop() // collects the CPU-profile and writes it in the file "cpu.pprof"
 
 	vv.LogVersion()
 	vv.SetVersionFlag()
@@ -52,15 +49,15 @@ func main() {
 		addr = "http://localhost:" + strconv.Itoa(mainPort) + "/myapp"
 	}
 
-	g := garcon.New(
-		garcon.WithURLs(addr),
-		garcon.WithDocURL("/doc"),
-		garcon.WithPProf(pprofPort),
-		garcon.WithDev(!*prod),
+	g := gc.New(
+		gc.WithURLs(addr),
+		gc.WithDocURL("/doc"),
+		gc.WithPProf(pprofPort),
+		gc.WithDev(!*prod),
 		nil, // just to test "none" option
 	)
 
-	var ck garcon.TokenChecker
+	var ck gc.TokenChecker
 	if *jwt {
 		ck = g.JWTChecker(hmacSHA256, "FreePlan", 10, "PremiumPlan", 100)
 	} else {
@@ -68,11 +65,11 @@ func main() {
 	}
 
 	middleware, connState := g.StartExporter(expPort,
-		garcon.WithLivenessProbes(func() []byte { return nil }),
-		garcon.WithLivenessProbes(func() []byte { return nil }),
-		garcon.WithLivenessProbes(func() []byte { return nil }),
-		garcon.WithReadinessProbes(func() []byte { return nil }),
-		garcon.WithReadinessProbes(func() []byte { return []byte("fail") }))
+		gc.WithLivenessProbes(func() []byte { return nil }),
+		gc.WithLivenessProbes(func() []byte { return nil }),
+		gc.WithLivenessProbes(func() []byte { return nil }),
+		gc.WithReadinessProbes(func() []byte { return nil }),
+		gc.WithReadinessProbes(func() []byte { return []byte("fail") }))
 	middleware = middleware.Append(
 		g.MiddlewareRejectUnprintableURI(),
 		g.MiddlewareLogRequest("fingerprint"),
@@ -89,15 +86,15 @@ func main() {
 	r := handler(g, addr, ck)
 	h := middleware.Then(r)
 
-	server := garcon.Server(h, mainPort, connState)
+	server := gc.Server(h, mainPort, connState)
 
 	log.Init("-------------- Open http://localhost" + server.Addr + "/myapp --------------")
-	err := garcon.ListenAndServe(&server)
+	err := gc.ListenAndServe(&server)
 	log.Error(err)
 }
 
 // handler creates the mapping between the endpoints and the handler functions.
-func handler(g *garcon.Garcon, addr string, ck garcon.TokenChecker) http.Handler {
+func handler(g *gc.Garcon, addr string, ck gc.TokenChecker) http.Handler {
 	r := chi.NewRouter()
 
 	// Static website files

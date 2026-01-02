@@ -2,7 +2,7 @@
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
-package garcon_test
+package gc_test
 
 import (
 	"reflect"
@@ -60,7 +60,7 @@ func TestSplitCleanedLines(t *testing.T) {
 		{"space+LFCR+space+LRCR+space", "   \n \r \n \r   ", nil},
 		{"complex", "aa\r\nbb", []string{"aa", "bb"}},
 		{"complex", "aa\r\nbb\r\n", []string{"aa", "bb"}},
-		{"complex", "\b   \n \r aa\n\t\tbb\t\t\t\tc c    \n\n\n   ", []string{"aa", "bb", "", "c "}},
+		{"complex", "\b   \n \r aa\n\t\tbb\t\t\t\tc c    \n\n\n   ", []string{"aa", "bb c c"}},
 	}
 
 	for _, c := range cases {

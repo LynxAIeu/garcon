@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	turbo64 "github.com/cristalhq/base64"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/LynxAIeu/garcon/gwt"
 
@@ -183,24 +183,13 @@ func TestNewAccessToken(t *testing.T) {
 			}
 			t.Log(algo+" AccessToken len=", len(tokenStr), tokenStr)
 
-			validator := jwt.NewParser(jwt.WithValidMethods([]string{algo}))
+			parser := jwt.NewParser(jwt.WithValidMethods([]string{algo}))
 
 			var claims gwt.AccessClaims
 			f := func(*jwt.Token) (any, error) { return publicKey, nil }
-			token, err := validator.ParseWithClaims(tokenStr, &claims, f)
+			_, err = parser.ParseWithClaims(tokenStr, &claims, f)
 			if err != nil {
 				t.Error("ParseWithClaims error:", err)
-				return
-			}
-
-			err = token.Claims.Valid()
-			if err != nil {
-				t.Error("token.Claims.Valid:", err)
-				return
-			}
-			err = claims.Valid()
-			if err != nil {
-				t.Error("claims.Valid:", err)
 				return
 			}
 

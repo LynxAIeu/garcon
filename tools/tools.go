@@ -7,14 +7,14 @@ package tools
 
 import (
 	// disable golangci-lint because fails when upgrading indirect dependencies
-	// _ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	// _ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 
 	_ "github.com/mailru/easyjson"
 	// _ "mvdan.cc/gofumpt"
 )
 
 // Lint:
-// go run github.com/golangci/golangci-lint/cmd/golangci-lint run --fix
+// go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --fix
 
 // Format source code:
 // go run mvdan.cc/gofumpt -extra -l -w .
