@@ -1,0 +1,42 @@
+# /etc/systemd/system/gitwww.service
+[Unit]
+Description=GitWWW: automatic static-site builder
+Documentation=exec:/var/opt/gitwww/gitwww -d
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile=/var/opt/gitwww/gitwww.env
+ExecStart=/var/opt/gitwww/gitwww
+
+# -------------------------------------------------
+# CPU scheduling – balanced trade‑off
+# -------------------------------------------------
+# Run with the idle scheduling policy so the daemon only gets CPU
+# time when no higher‑priority task is runnable. When the system is
+# otherwise idle, the process can use all available CPUs, giving
+# BuildKit the full compute power it needs.
+CPUSchedulingPolicy=idle
+
+# Keep the traditional nice value at the lowest priority as an extra
+# safeguard for systems that do not fully honor SCHED_IDLE.
+Nice=19
+
+# -------------------------------------------------
+# Restart policy
+# -------------------------------------------------
+# Restart only on unexpected failures; a manual “systemctl stop” will keep it stopped.
+Restart=on-failure
+RestartSec=10
+
+[Install]
+# When the service is enabled (systemctl enable gitwww.service),
+# systemd creates a symlink from this unit into
+# /etc/systemd/system/multi-user.target.wants/.
+# multi-user.target represents the normal, non‑graphical multi‑user
+# system state (runlevel 3).  At boot, when the system reaches that
+# target, all units wanted by it—including this one—are started
+# automatically.
+WantedBy=multi-user.target
