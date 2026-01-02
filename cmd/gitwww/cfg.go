@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -20,6 +21,7 @@ import (
 
 type Cfg struct {
 	Repositories map[string]map[string]string `toml:"-"      yaml:"-"      comment:"Git repos to watch and their build arguments"`
+	Path         string                       `toml:"cfg"    yaml:"cfg"    comment:"\nConfiguration path: can be a directory or a TOML file"`
 	Repos        string                       `toml:"repos"  yaml:"repos"  comment:"\ndirectory containing the repositories to build/deploy (default /var/opt/garcon)"`
 	WWW          string                       `toml:"www"    yaml:"www"    comment:"\nfinal destination of the deployed static web file (default /var/opt/www)"`
 	Engine       string                       `toml:"engine" yaml:"engine" comment:"\none or two container management tools (separated by a comma) among docker and podman (default docker)"`
@@ -28,13 +30,19 @@ type Cfg struct {
 }
 
 const (
+	defaultWWW     = "/var/opt/www"
 	defaultCfgDir  = "/var/opt/gitwww/"
 	defaultCfgName = "gitwww.ini"
+	gitwwwService  = "gitwww.service"
 	defaultCfgPath = defaultCfgDir + defaultCfgName
 
 	GITWWW_CFG = "GITWWW_CFG"
+	GITWWW_WWW = "GITWWW_WWW"
 	GITWWW_LOG = "GITWWW_LOG"
 )
+
+//go:embed manpage.txt
+var manpage []byte
 
 func (cfg *Cfg) clone() *Cfg {
 	c2 := *cfg
@@ -42,14 +50,21 @@ func (cfg *Cfg) clone() *Cfg {
 }
 
 func getCfg() (*Cfg, error) {
+	doc := flag.Bool("doc", false, "Print help page and exit")
 	path := flag.String("c", defaultCfgPath, "Configuration (file or directory), take precedence on "+GITWWW_CFG)
 	debug := flag.Bool("d", false, "debug mode, same as "+GITWWW_LOG+"=DEBUG")
 	quiet := flag.Bool("q", false, "quiet mode, same as "+GITWWW_LOG+"=WARN")
-	write := flag.Bool("w", false, "write the configuration file")
+	write := flag.Bool("w", false, "write the configuration file and exit")
+	writeService := flag.Bool("ws", false, "write the "+gitwwwService+" required by Systemd (use -c to specify the path) and exit")
 	absolute := flag.Bool("ww", false, "overwrite an explicit version of the configuration file using absolute paths")
 	simplify := flag.Bool("www", false, "overwrite a simplified version of the configuration file")
 	clean := flag.Bool("wwww", false, "overwrite a very simplified version of the configuration file: use the minimum required repo parameters")
 	flag.Parse()
+
+	if *doc {
+		os.Stdout.Write(manpage)
+		return nil, nil
+	}
 
 	if *clean {
 		*simplify = true
@@ -69,18 +84,24 @@ func getCfg() (*Cfg, error) {
 		*path = filepath.Join(*path, defaultCfgName)
 	}
 
+	www := os.Getenv(GITWWW_WWW)
+	if www == "" {
+		www = defaultWWW
+	}
+
 	cfg := &Cfg{ // default values
+		Path:   *path,
 		Repos:  filepath.Join(filepath.Dir(*path), "repos"),
-		WWW:    "/var/opt/www",
+		WWW:    www,
 		Engine: "docker", // use "docker,podman" to try docker, then podman if docker is not working
 		Sleep:  10,       // 10 seconds
 	}
 
-	data, err := os.ReadFile(*path)
-	if err != nil && *path == defaultCfgPath && !directoryExists(defaultCfgDir) {
+	data, err := os.ReadFile(cfg.Path)
+	if err != nil && cfg.Path == defaultCfgPath && !directoryExists(defaultCfgDir) {
 		slog.Info("Use local config because no default configuration found", "dir", defaultCfgDir, "err", err)
-		*path = defaultCfgName
-		data, err = os.ReadFile(*path)
+		cfg.Path = defaultCfgName
+		data, err = os.ReadFile(cfg.Path)
 		if directoryExists("repos") {
 			cfg.Repos = "repos"
 		}
@@ -89,7 +110,7 @@ func getCfg() (*Cfg, error) {
 		}
 	}
 	if err != nil || len(data) == 0 {
-		slog.Info("Use default settings because no configuration file (or empty)", "path", *path, "err", err)
+		slog.Info("Use default settings because no configuration file (or empty)", "path", cfg.Path, "err", err)
 		if !directoryExists(cfg.Repos) {
 			cfg.Repos = filepath.Dir(cfg.Repos)
 		}
@@ -104,7 +125,7 @@ func getCfg() (*Cfg, error) {
 
 		err = toml.Unmarshal(data[:pos], cfg)
 		if err != nil {
-			slog.Error("Failed to parse #1", "path", *path, "err", err, "cfgData", string(data[:200]))
+			slog.Error("Failed to parse #1", "path", cfg.Path, "err", err, "cfgData", string(data[:200]))
 			return nil, err
 		}
 		if pos < len(data) {
@@ -113,7 +134,7 @@ func getCfg() (*Cfg, error) {
 			if err == nil {
 				cfg.Repositories = tables
 			} else {
-				fmt.Println("Failed to parse #2", "path", *path, "err", err, "cfgData", string(data[:200]))
+				fmt.Println("Failed to parse #2", "path", cfg.Path, "err", err, "cfgData", string(data[:200]))
 			}
 		}
 	}
@@ -157,6 +178,15 @@ func getCfg() (*Cfg, error) {
 		}
 	}
 
+	if *writeService {
+		service, err := cfg.writeGitwwwService()
+		if err != nil {
+			slog.Error("Cannot write", "service", service, "err", err)
+		} else {
+			slog.Info("Success write", "service", service)
+		}
+	}
+
 	if *write {
 		if *simplify || *absolute {
 			cfg = sanitized
@@ -173,15 +203,15 @@ func getCfg() (*Cfg, error) {
 			slog.Error("Failed to toml.Marshal", "err", err, "cfg", cfg)
 			return nil, err
 		}
-		f, err := os.Create(*path)
+		f, err := os.Create(cfg.Path)
 		if err != nil {
-			slog.Error("Cannot create", "file", *path, "err", err)
+			slog.Error("Cannot create", "file", cfg.Path, "err", err)
 			return nil, err
 		}
 		defer f.Close()
 		_, err = f.Write(data)
 		if err != nil {
-			slog.Error("Cannot write #1", "file", *path, "err", err)
+			slog.Error("Cannot write #1", "file", cfg.Path, "err", err)
 		}
 		if len(cfg.Repositories) > 0 {
 			data, err = toml.Marshal(cfg.Repositories)
@@ -191,14 +221,18 @@ func getCfg() (*Cfg, error) {
 			}
 			_, err = f.WriteString("\n\n# Git repos to watch new commits and their build arguments\n\n")
 			if err != nil {
-				slog.Error("Cannot write #2", "file", *path, "err", err)
+				slog.Error("Cannot write #2", "file", cfg.Path, "err", err)
 			}
 			_, err = f.Write(data)
 			if err != nil {
-				slog.Error("Cannot write #3", "file", *path, "err", err)
+				slog.Error("Cannot write #3", "file", cfg.Path, "err", err)
 			}
 		}
-		slog.Info("Flag -w (or -ww or -www) => exit after writing", "file", *path)
+		slog.Info("Flag -w (or -ww or -www) => exit after writing", "file", cfg.Path)
+		return nil, nil
+	}
+
+	if *writeService {
 		return nil, nil
 	}
 

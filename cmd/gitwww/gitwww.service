@@ -1,14 +1,24 @@
 # /etc/systemd/system/gitwww.service
 [Unit]
 Description=GitWWW: automatic static-site builder
-Documentation=exec:/var/opt/gitwww/gitwww -d
+Documentation=exec:/var/opt/gitwww/gitwww -doc
 After=network.target docker.service
 Requires=docker.service
+
+# Don't use Environment= or EnvironmentFile= for credentials / secrets.
+# But use LoadCredential=, LoadCredentialEncrypted= or SetCredentialEncrypted=
+# Note: env vars set for a unit are exposed to unprivileged clients via D-Bus IPC.
+# Moreover, env vars are propagated down the process tree,
+# including across security boundaries (such as setuid/setgid executables),
+# and hence might leak to processes that should not have access to the secret data.
+# https://serverfault.com/a/1110351
 
 [Service]
 Type=simple
 User=root
-EnvironmentFile=/var/opt/gitwww/gitwww.env
+Environment="GITWWW_CFG="
+Environment="GITWWW_WWW="
+Environment="GITWWW_LOG="
 ExecStart=/var/opt/gitwww/gitwww
 
 # -------------------------------------------------
