@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The contributors of Garcon.
+// Copyright 2021 The contributors of Garcon.
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 

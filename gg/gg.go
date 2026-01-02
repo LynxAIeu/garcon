@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The contributors of Garcon.
+// Copyright 2021 The contributors of Garcon.
 // This file is part of Garcon, web+API server toolkit under the MIT License.
 // SPDX-License-Identifier: MIT
 
@@ -436,7 +436,7 @@ func ConvertSize64(sizeInBytes int64) string {
 // Clone the input dictionary if it needs to be preserved:
 //
 //	d2 := append([]string{}, dictionary...)
-//	words := garcon.ExtractWords(csv, d2)
+//	words := mm.ExtractWords(csv, d2)
 func ExtractWords(csv string, dictionary []string) []string {
 	prefixes := strings.Split(csv, ",")
 

@@ -668,7 +668,7 @@ your contributions are welcome. :wink:
 
 ## 🗽 Copyright and license
 
-Copyright (c) 2021-2025 The contributors of Garcon.
+Copyright (c) 2021 The contributors of Garcon.
 
 Garcon is free software, and can be redistributed
 and/or modified under the terms of the MIT License.

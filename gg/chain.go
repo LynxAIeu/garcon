@@ -1,7 +1,7 @@
 // Copyright 2014 Justinas Stankevicius
 // Copyright 2015 Alice contributors
 // Copyright 2017 Sangjin Lee (sjlee)
-// Copyright 2021-2025 The contributors of Garcon
+// Copyright 2021 The contributors of Garcon
 //
 // This file is a modified copy from https://github.com/justinas/alice
 // and also from https://github.com/justinas/alice/pull/40
