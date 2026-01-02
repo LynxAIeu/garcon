@@ -72,8 +72,8 @@ func getCfg() (*Cfg, error) {
 	cfg := &Cfg{ // default values
 		Repos:  filepath.Join(filepath.Dir(*path), "repos"),
 		WWW:    "/var/opt/www",
-		Engine: "docker,podman", // try docker, then podman if docker is not working
-		Sleep:  10,              // 10 seconds
+		Engine: "docker", // use "docker,podman" to try docker, then podman if docker is not working
+		Sleep:  10,       // 10 seconds
 	}
 
 	data, err := os.ReadFile(*path)
