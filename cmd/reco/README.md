@@ -10,7 +10,7 @@ Thus this tool has been designed to compress a S2-encoded file into another form
 
 By default, the tool `reco` decompresses the S2-encoded `file.s2` and compresses it to Brotli: `file.br`.
 
-Note: the Brotli, GZip and ZStandard official compressors are faster and perform better compression ratios.
+Note: the Brotli, GZip and ZStandard official compressors perform better compression ratios.
 
 ## Supported formats
 
@@ -25,7 +25,7 @@ no compression  | ✅    | ✅
 
 ## Usage
 
-`go run ./cmd/reco [-h] [-level L] [-loops N] [-v] [INPUT-FILE] [OUTPUT-FILE]`
+`go run github.com/LynxAIeu/garcon/cmd/reco@latest [-h] [-level L] [-loops N] [-v] [INPUT-FILE] [OUTPUT-FILE]`
 
 The compression format is deduced from the file extension (`*.br`, `*.ztd`…).
 
