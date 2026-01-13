@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/LynxAIeu/garcon/gc"
-	"github.com/LynxAIeu/garcon/gg"
-	"github.com/LynxAIeu/garcon/vv"
+	"github.com/lynxai-team/garcon/gc"
+	"github.com/lynxai-team/garcon/gg"
+	"github.com/lynxai-team/garcon/vv"
 
-	"github.com/LynxAIeu/emo"
 	"github.com/go-chi/chi/v5"
+	"github.com/lynxai-team/emo"
 )
 
 // Garcon settings.

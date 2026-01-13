@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 )
 
 // StaticWebServer is a webserver serving static files

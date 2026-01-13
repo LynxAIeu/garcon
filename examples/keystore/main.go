@@ -12,10 +12,10 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/LynxAIeu/garcon/gc"
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gc"
+	"github.com/lynxai-team/garcon/gg"
 
-	"github.com/LynxAIeu/emo"
+	"github.com/lynxai-team/emo"
 
 	"github.com/go-chi/chi/v5"
 )

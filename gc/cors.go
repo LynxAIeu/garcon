@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 
 	"github.com/rs/cors"
 )

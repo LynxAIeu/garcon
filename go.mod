@@ -1,11 +1,11 @@
-module github.com/LynxAIeu/garcon
+module github.com/lynxai-team/garcon
 
 go 1.25.5
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
-	github.com/LynxAIeu/emo v0.0.0-20260102000151-bd606f39cc08
-	github.com/LynxAIeu/incorruptible v0.0.0-20260102113753-6906f8c34a1e
+	github.com/lynxai-team/emo v0.0.0-20260102000151-bd606f39cc08
+	github.com/lynxai-team/incorruptible v0.0.0-20260102113753-6906f8c34a1e
 	github.com/andybalholm/brotli v1.2.0
 	github.com/carlmjohnson/flagx v0.22.2
 	github.com/carlmjohnson/versioninfo v0.22.5

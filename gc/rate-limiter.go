@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 )
 
 type (

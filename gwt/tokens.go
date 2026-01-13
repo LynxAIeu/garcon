@@ -22,13 +22,13 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/LynxAIeu/garcon/gg"
-	"github.com/LynxAIeu/garcon/timex"
+	"github.com/lynxai-team/garcon/gg"
+	"github.com/lynxai-team/garcon/timex"
 )
 
 const notSupportedNotice = " not yet supported. " +
-	"Please contact hello@LynxAIxAI.eu or " +
-	"open an issue at https://github.com/LynxAIeu/quid"
+	"Please contact hello@lynxai.team or " +
+	"open an issue at https://github.com/lynxai-team/quid"
 
 // GenRefreshToken generates a refresh token for a user in a namespace.
 func GenRefreshToken(timeout, maxTTL, namespace, user string, secretKey []byte) (string, error) {

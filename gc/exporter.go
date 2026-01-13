@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"

@@ -457,7 +457,7 @@ linters:
         - name: datarace # dataraces by goroutines capturing named return values and for-range values
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#deep-exit
         - name: deep-exit # functions should not stop program execution by exiting (except main and init)
-          exclude: ["github.com/LynxAIeu/goinfer", "goinfer.go", "./goinfer.go", "./..."]
+          # exclude: ["github.com/lynxai-team/garcon", "./..."]
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#defer
         - name: defer # mistakes when using defer statement
           # arguments: # enable all

@@ -16,12 +16,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LynxAIeu/garcon/gg"
-	"github.com/LynxAIeu/garcon/gwt"
-	"github.com/LynxAIeu/garcon/vv"
+	"github.com/lynxai-team/garcon/gg"
+	"github.com/lynxai-team/garcon/gwt"
+	"github.com/lynxai-team/garcon/vv"
 
-	"github.com/LynxAIeu/emo"
-	"github.com/LynxAIeu/incorruptible"
+	"github.com/lynxai-team/emo"
+	"github.com/lynxai-team/incorruptible"
 )
 
 type Garcon struct {

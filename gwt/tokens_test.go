@@ -16,9 +16,9 @@ import (
 	turbo64 "github.com/cristalhq/base64"
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/LynxAIeu/garcon/gwt"
+	"github.com/lynxai-team/garcon/gwt"
 
-	"github.com/LynxAIeu/emo"
+	"github.com/lynxai-team/emo"
 )
 
 const jwtSample = `{"usr":"jane","grp":["group1","group2"],"org":["organization1","organization2"],"exp":1595950745}`
@@ -250,7 +250,7 @@ Go 1.18 (not sure)
 go test -bench=. -benchmem ./...
 goos: linux
 goarch: amd64
-pkg: github.com/LynxAIeu/quid/tokens
+pkg: github.com/lynxai-team/quid/tokens
 cpu: AMD Ryzen 9 3900X 12-Core Processor
 BenchmarkOldDecodeStringB64-24    3331362   376.8 ns/op   256 B/op   2 allocs/op
 BenchmarkOldDecodeB64-24          4375579   277.0 ns/op   112 B/op   1 allocs/op
@@ -259,12 +259,12 @@ BenchmarkOldEncodeB64-24          5913382   209.2 ns/op   144 B/op   1 allocs/op
 BenchmarkOldEncodeT64-24          8053846   144.6 ns/op   144 B/op   1 allocs/op
 BenchmarkOldEncodeToStringB64-24  3928515   297.4 ns/op   256 B/op   2 allocs/op
 PASS
-ok      github.com/LynxAIeu/quid/tokens     6.254s
+ok      github.com/lynxai-team/quid/tokens     6.254s
 
 Go 1.25.1
 
 goarch: amd64
-pkg: github.com/LynxAIeu/garcon/gwt
+pkg: github.com/lynxai-team/garcon/gwt
 cpu: AMD Ryzen 9 3900X 12-Core Processor
 BenchmarkOldDecodeB64-24          4593544   263.8 ns/op   112 B/op   1 allocs/op
 BenchmarkOldDecodeT64-24          7166172   167.1 ns/op   112 B/op   1 allocs/op
@@ -279,7 +279,7 @@ BenchmarkEncodeLenT64-24          8425144   142.3 ns/op   144 B/op   1 allocs/op
 BenchmarkEncodeToStringB64-24     4300639   281.0 ns/op   288 B/op   2 allocs/op
 BenchmarkEncodeToStringT64-24     7856421   154.4 ns/op   144 B/op   1 allocs/op
 PASS
-ok      github.com/LynxAIeu/garcon/gwt     14.527s
+ok      github.com/lynxai-team/garcon/gwt     14.527s
 */
 
 func TestEqualBase64Turbo64(t *testing.T) {

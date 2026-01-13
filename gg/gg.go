@@ -25,7 +25,7 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/go-chi/chi/v5"
 
-	"github.com/LynxAIeu/emo"
+	"github.com/lynxai-team/emo"
 )
 
 type (

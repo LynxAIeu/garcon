@@ -7,7 +7,7 @@ package gc
 import (
 	"net/http"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 )
 
 // MiddlewareRejectUnprintableURI is a middleware rejecting HTTP requests having

@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 )
 
 const wantedBodyResponse = "t1\nt2\nt3\nt4\napp\n"

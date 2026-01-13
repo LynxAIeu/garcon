@@ -21,7 +21,7 @@ import (
 	turbo64 "github.com/cristalhq/base64"
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 )
 
 type (

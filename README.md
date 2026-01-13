@@ -1,11 +1,11 @@
 # Garcon
 
-| ![logo](examples/www/myapp/images/garcon.png) | Garcon works with all HTTP routers ans middleware respecting the Go HTTP standards. Garcon provides the batteries: static website server, contact-form backend, API helpers, debugging helpers (PProf), Git version, exporter server (Prometheus), health endpoints (Kubernetes), URI sanitization and middleware: rate-limiter, JWT cookies, CORS, traffic logs, OPA…<br>[![Go Reference](examples/www/myapp/images/go-ref.svg "Go documentation for Garcon")](https://pkg.go.dev/github.com/LynxAIeu/garcon) [![Go Report Card](https://goreportcard.com/badge/github.com/LynxAIeu/garcon)](https://goreportcard.com/report/github.com/LynxAIeu/garcon) |
+| ![logo](examples/www/myapp/images/garcon.png) | Garcon works with all HTTP routers ans middleware respecting the Go HTTP standards. Garcon provides the batteries: static website server, contact-form backend, API helpers, debugging helpers (PProf), Git version, exporter server (Prometheus), health endpoints (Kubernetes), URI sanitization and middleware: rate-limiter, JWT cookies, CORS, traffic logs, OPA…<br>[![Go Reference](examples/www/myapp/images/go-ref.svg "Go documentation for Garcon")](https://pkg.go.dev/github.com/lynxai-team/garcon) [![Go Report Card](https://goreportcard.com/badge/github.com/lynxai-team/garcon)](https://goreportcard.com/report/github.com/lynxai-team/garcon) |
 | --------------------------------------------- |:--------- |
 
 ## Motivation
 
-Many projects often start with one of the many nice HTTP routers and middleware already available and develop their own middleware, debugging server, API helpers... At LynxAI.eu, we decided to share in one place (here) all our stuff in the idea to let other projects go faster.
+Many projects often start with one of the many nice HTTP routers and middleware already available and develop their own middleware, debugging server, API helpers... At lynxai.team, we decided to share in one place (here) all our stuff in the idea to let other projects go faster.
 
 ## Middleware
 
@@ -18,7 +18,7 @@ Our Middleware are very easy to setup. They respect the Go standards. Thus you c
 - `MiddlewareRateLimiter` Limit incoming request to prevent flooding
 - `MiddlewareServerHeader` Add the "Server" HTTP header in the response
 - `JWTChecker` JWT management using HttpOnly cookie or Authorization header
-- `IncorruptibleChecker` Session cookie with [Incorruptible](https://github.com/LynxAIeu/incorruptible) token
+- `IncorruptibleChecker` Session cookie with [Incorruptible](https://github.com/lynxai-team/incorruptible) token
 - `MiddlewareCORS` Cross-Origin Resource Sharing (CORS)
 - `MiddlewareOPA` Authenticate from Datalog/Rego files using [Open Policy Agent](https://www.openpolicyagent.org)
 - `MiddlewareSecureHTTPHeader` Set some HTTP header to increase the web security
@@ -86,13 +86,13 @@ server.ListenAndServe()
 
 ## Incorruptible middleware
 
-Garcon uses the [Incorruptible](https://github.com/LynxAIeu/incorruptible) package
+Garcon uses the [Incorruptible](https://github.com/lynxai-team/incorruptible) package
 to create/verify session cookie.
 
 ```go
 package main
 
-import "github.com/LynxAIeu/garcon/gc"
+import "github.com/lynxai-team/garcon/gc"
 
 func main() {
     g, _ := gc.New(
@@ -132,7 +132,7 @@ The JWT and Incorruptible checkers share a common interface,
 ```go
 package main
 
-import "github.com/LynxAIeu/garcon/gc"
+import "github.com/lynxai-team/garcon/gc"
 
 func main() {
     g, _ := gc.New(
@@ -166,13 +166,13 @@ func main() {
 
 In production, this library is used by
 [Rainbow](https://github.com/teal-finance/rainbow),
-[Quid](https://github.com/LynxAIeu/quid)
-and other internal projects at LynxAI.eu.
+[Quid](https://github.com/lynxai-team/quid)
+and other internal projects at lynxai.team.
 
-Please propose a [Pull Request](https://github.com/LynxAIeu/garcon/pulls) to add here your project that also uses Garcon.
+Please propose a [Pull Request](https://github.com/lynxai-team/garcon/pulls) to add here your project that also uses Garcon.
 
 See a complete real example in the repo
-[github.com/LynxAIeu/rainbow](https://github.com/LynxAIeu/rainbow/blob/main/cmd/server/main.go).
+[github.com/lynxai-team/rainbow](https://github.com/lynxai-team/rainbow/blob/main/cmd/server/main.go).
 
 ## CPU profiling
 
@@ -182,7 +182,7 @@ thanks to <https://github.com/pkg/profile>.
 In your code, add `defer gc.ProbeCPU.Stop()` that will write the `cpu.pprof` file.
 
 ```go
-import "github.com/LynxAIeu/garcon/gc"
+import "github.com/lynxai-team/garcon/gc"
 
 func myFunctionConsumingLotsOfCPU() {
     defer gc.ProbeCPU.Stop()
@@ -206,7 +206,7 @@ Below is a simplified extract:
 ```go
 package main
 
-import "github.com/LynxAIeu/garcon/vv"
+import "github.com/lynxai-team/garcon/vv"
 
 func main() {
     defer gc.ProbeCPU().Stop() // collects the CPU-profile and writes it in the file "cpu.pprof"
@@ -512,7 +512,7 @@ import (
     "time"
 
     "github.com/go-chi/chi/v5"
-    "github.com/LynxAIeu/garcon/gc"
+    "github.com/lynxai-team/garcon/gc"
 )
 
 // Garcon settings
@@ -658,12 +658,12 @@ and there's always plenty to do!
 
 If you have some suggestions, or need a new feature,
 please contact us, using the
-[issues](https://github.com/LynxAIeu/garcon/issues),
-or at hello@lynxai.eu or
+[issues](https://github.com/lynxai-team/garcon/issues),
+or at <hello@lynxai.team> or
 [@TealFinance](https://twitter.com/TealFinance).
 
 Feel free to propose a
-[Pull Request](https://github.com/LynxAIeu/garcon/pulls),
+[Pull Request](https://github.com/lynxai-team/garcon/pulls),
 your contributions are welcome. :wink:
 
 ## 🗽 Copyright and license

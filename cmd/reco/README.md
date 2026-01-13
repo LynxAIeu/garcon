@@ -25,7 +25,7 @@ no compression  | ✅    | ✅
 
 ## Usage
 
-`go run github.com/LynxAIeu/garcon/cmd/reco@latest [-h] [-level L] [-loops N] [-v] [INPUT-FILE] [OUTPUT-FILE]`
+`go run github.com/lynxai-team/garcon/cmd/reco@latest [-h] [-level L] [-loops N] [-v] [INPUT-FILE] [OUTPUT-FILE]`
 
 The compression format is deduced from the file extension (`*.br`, `*.ztd`…).
 

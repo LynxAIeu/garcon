@@ -11,12 +11,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/LynxAIeu/emo"
+	"github.com/lynxai-team/emo"
 
-	"github.com/LynxAIeu/garcon/gc"
-	"github.com/LynxAIeu/garcon/gg"
-	"github.com/LynxAIeu/garcon/gwt"
-	"github.com/LynxAIeu/garcon/vv"
+	"github.com/lynxai-team/garcon/gc"
+	"github.com/lynxai-team/garcon/gg"
+	"github.com/lynxai-team/garcon/gwt"
+	"github.com/lynxai-team/garcon/vv"
 
 	"github.com/go-chi/chi/v5"
 )

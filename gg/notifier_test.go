@@ -7,7 +7,7 @@ package gg_test
 import (
 	"testing"
 
-	"github.com/LynxAIeu/garcon/gg"
+	"github.com/lynxai-team/garcon/gg"
 )
 
 func TestNotifier_Notify(t *testing.T) {
