@@ -4,8 +4,6 @@ go 1.25.5
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
-	github.com/lynxai-team/emo v0.0.0-20260102000151-bd606f39cc08
-	github.com/lynxai-team/incorruptible v0.0.0-20260102113753-6906f8c34a1e
 	github.com/andybalholm/brotli v1.2.0
 	github.com/carlmjohnson/flagx v0.22.2
 	github.com/carlmjohnson/versioninfo v0.22.5
@@ -19,6 +17,8 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/klauspost/compress v1.18.2
+	github.com/lynxai-team/emo v0.0.0-20260113172255-0caed9b0de17
+	github.com/lynxai-team/incorruptible v0.0.0-20260113174508-862eb6a02ab7
 	github.com/mailru/easyjson v0.9.1
 	github.com/minio/highwayhash v1.0.3
 	github.com/moby/go-archive v0.2.0
