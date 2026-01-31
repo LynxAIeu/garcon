@@ -66,8 +66,15 @@ func (c *Config) generateMarkdown() error {
 		}
 		rel = filepath.ToSlash(rel)
 
-		// Header line - honor the user‑provided style.
-		_, err = fmt.Fprintf(w, "%s%s\n\n", c.header, rel)
+		// Header line with filename.
+		switch {
+		case c.header == "**":
+			_, err = fmt.Fprintf(w, "**%s**\n\n", rel)
+		case len(c.header) == 1:
+			_, err = fmt.Fprintf(w, "%s%s%s\n\n", c.header, rel, c.header)
+		default:
+			_, err = fmt.Fprintf(w, "%s%s\n\n", c.header, rel) // "## File: path/file.go"
+		}
 		if err != nil {
 			return err
 		}

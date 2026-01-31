@@ -50,9 +50,20 @@ write all src/* files within the src.md file.
   md-code -gen src.md src
   cd src ; md-code -gen
 
-To filter the Go files only:
+Insert only the Go files:
 
   md-code -gen -regex '[/A-Za-z0-9_-]+[.]go' src
+
+The default header is "## File: path/file.go".
+This can be changed with -header <text>.
+
+  md-code -gen -header "# "         =>  "# path/file.go"
+  md-code -gen -header "## File: "  =>  "## File: path/file.go"
+
+Two special cases in bonus:
+
+  md-code -gen -header "**"  =>  "**path/file.go**"
+  md-code -gen -header "` + "`" + `"   =>  "` + "`path/file.go`" + `"
 
 OPTIONS
 
